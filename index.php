@@ -387,7 +387,7 @@ if (!isset($_SESSION['username'])) {
                                                 <select class="form-control custom-select" id="currency2">
                                                     <option value="1">USD</option>
                                                     <option value="1">EUR</option>
-                                                    <option value="2">USA</option>
+                                                    <option value="2">AUD</option>
                                                     <option value="3">CAD</option>
                                                 </select>
                                             </div>

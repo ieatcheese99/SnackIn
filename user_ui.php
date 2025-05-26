@@ -1650,14 +1650,14 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
     <section class="testimonials" id="testimonials">
         <div class="container">
             <div class="section-title">
-                <h2>Brand Ambasador</h2>
+                <h2>Testimonial Pelanggan</h2>
                 <div class="divider"></div>
             </div>
             <div class="testimonials-grid">
                 <!-- Testimonial 1 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="assets/img/testimonial-1.jpg" alt="Testimonial Person 1">
+                        <img src="4.png" alt="4.png">
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1666,14 +1666,14 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
                     </div>
-                    <p class="testimonial-text">"Snack In adalah tempat favorit saya untuk membeli cemilan. Oreo Milkshake mereka sangat enak dan menyegarkan!"</p>
-                    <h3 class="testimonial-name">Budi Santoso</h3>
+                    <p class="testimonial-text">"Snack In adalah tempat favorit saya untuk membeli cemilan. Thai Tea mereka sangat enak dan menyegarkan!"</p>
+                    <h3 class="testimonial-name">Abidilah Akmal</h3>
                 </div>
 
                 <!-- Testimonial 2 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="assets/img/testimonial-2.jpg" alt="Testimonial Person 2">
+                        <img src="3.png" alt="3.png">
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1682,14 +1682,14 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
                     </div>
-                    <p class="testimonial-text">"Saya selalu membeli Es Segar dari Snack In setiap kali berkunjung. Rasanya sangat menyegarkan dan harganya terjangkau!"</p>
-                    <h3 class="testimonial-name">Siti Rahayu</h3>
+                    <p class="testimonial-text">"Saya selalu membeli Kue soes  dari Snack In setiap kali berkunjung. Rasanya sangat Enak dan harganya terjangkau!"</p>
+                    <h3 class="testimonial-name">Naila Aribah</h3>
                 </div>
 
                 <!-- Testimonial 3 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="assets/img/testimonial-3.jpg" alt="Testimonial Person 3">
+                        <img src="2.png" alt="2.png">
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
