@@ -108,6 +108,109 @@ if (!isset($_SESSION['username'])) {
             /* Bikin sudutnya lebih halus */
         }
 
+        /* Main Header */
+        .main-header {
+            background-color: #00227c;
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .main-nav ul {
+            display: flex;
+            gap: 30px;
+        }
+
+        .main-nav a {
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .main-nav a:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .main-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: white;
+            transition: width 0.3s ease;
+        }
+
+        .main-nav a:hover::after {
+            width: 100%;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .action-icon {
+            position: relative;
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .action-icon:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: white;
+            color: #00227c;
+            font-size: 10px;
+            font-weight: 600;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-icon {
+            color: #ff6b6b;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
         /* Styling untuk chart container */
         .chart-container {
             background: white;
@@ -217,50 +320,48 @@ if (!isset($_SESSION['username'])) {
     </div>
     <!-- * loader -->
     <!-- App Header -->
-    <div class="appHeader bg-primary text-light">
-        <div class="left">
-            <a href="#" class="headerButton" data-bs-toggle="modal" data-bs-target="#sidebarPanel">
-                <ion-icon name="menu-outline"></ion-icon>
+   <header class="main-header">
+        <div class="container">
+            <a href="user_ui.php" class="logo">
+                <img src="assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
+                <span>SNACK IN</span>
             </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="user_ui.php">Home</a></li>
+                    <li><a href="about.php">About</a></li>
+                    <li><a href="#produk">Shop</a></li>
+                    <li><a href="#testimonials">Testimoni</a></li>
+                    <li><a href="#footer">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <div class="action-icon">
+                    <a href="include/cart.php">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="badge cart-count">0</span>
+                    </a>
+                </div>
+                <div class="action-icon">
+                    <a href="history.php">
+                        <i class="fas fa-history"></i>
+                    </a>
+                </div>
+                <?php if($isLoggedIn): ?>
+                <a href="logout.php" class="action-icon logout-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+                <?php else: ?>
+                <a href="login.php" class="action-icon">
+                    <i class="fas fa-user"></i>
+                </a>
+                <?php endif; ?>
+                <div class="mobile-menu-toggle" id="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
         </div>
-        <div class="pageTitle">
-            <img src="assets/img/logo.png" alt="logo" class="logo">
-        </div>
-        <div class="right">
-            <a href="include/cart.php" class="headerButton">
-                <ion-icon name="cart-outline"></ion-icon>
-                <span class="badge badge-danger cart-count">0</span>
-            </a>
-            <script>
-                $(document).ready(function() {
-                    function updateCartCount() {
-                        $.ajax({
-                            url: "cart_action.php",
-                            type: "POST",
-                            data: {
-                                action: "count"
-                            },
-                            success: function(count) {
-                                $(".cart-count").text(count);
-                            }
-                        });
-                    }
-                    updateCartCount();
-                });
-            </script>
-            <a href="app-notifications.html" class="headerButton">
-                <ion-icon class="icon" name="notifications-outline"></ion-icon>
-                <span class="badge badge-danger">4</span>
-            </a>
-            <a href="app-settings.html" class="headerButton">
-                <img src="assets/img/sample/avatar/avatar1.jpg" alt="image" class="imaged w32">
-                <span class="badge badge-danger">6</span>
-            </a>
-            <a href="logout.php" class="headerButton">
-                <ion-icon name="log-out-outline"></ion-icon>
-            </a>
-        </div>
-    </div>
+    </header>
     <!-- * App Header -->
     <!-- App Capsule -->
     <div id="appCapsule">
