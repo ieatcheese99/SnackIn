@@ -1650,7 +1650,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
     <section class="testimonials" id="testimonials">
         <div class="container">
             <div class="section-title">
-                <h2>Testimonial Pelanggan</h2>
+                <h2>Brand Ambasador</h2>
                 <div class="divider"></div>
             </div>
             <div class="testimonials-grid">
