@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $nama = $_POST['nama'];
             $alamat = $_POST['alamat'];
             $metode_pembayaran = $_POST['metode_pembayaran'];
-            $total_harga = 0;
+            $subtotal = 0;
             $username = isset($_SESSION['username']) ? $_SESSION['username'] : $nama;
 
             // Pastikan ada produk dalam keranjang sebelum checkout
@@ -116,108 +116,55 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 exit;
             }
 
-            // Hitung total harga
+            // Hitung subtotal
             foreach ($_SESSION['cart'] as $item) {
-                $total_harga += $item['harga'] * $item['jumlah'];
+                $subtotal += $item['harga'] * $item['jumlah'];
             }
 
-            // Cek apakah tabel orders memiliki kolom status
-            $check_status_column = "SHOW COLUMNS FROM orders LIKE 'status'";
-            $status_column_exists = $db->query($check_status_column);
+            // Hitung biaya admin (5% dari subtotal)
+            $biaya_admin = $subtotal * 0.05;
+            $total_harga = $subtotal + $biaya_admin;
 
-            // Jika kolom status tidak ada, tambahkan kolom status
-            if ($status_column_exists && $status_column_exists->num_rows == 0) {
-                $add_status_column = "ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'pending' AFTER total_harga";
-                $db->query($add_status_column);
-            }
-
-            // Cek apakah tabel orders memiliki kolom username
-            $check_username_column = "SHOW COLUMNS FROM orders LIKE 'username'";
-            $username_column_exists = $db->query($check_username_column);
-
-            // Jika kolom username tidak ada, tambahkan kolom username
-            if ($username_column_exists && $username_column_exists->num_rows == 0) {
-                $add_username_column = "ALTER TABLE orders ADD COLUMN username VARCHAR(100) AFTER total_harga";
-                $db->query($add_username_column);
-            }
-
-            // Simpan ke tabel orders
-            $query = "INSERT INTO orders (nama, alamat, metode_pembayaran, total_harga";
-            
-            // Cek apakah kolom status ada
-            if ($status_column_exists && $status_column_exists->num_rows > 0) {
-                $query .= ", status";
-            }
-            
-            // Cek apakah kolom username ada
-            if ($username_column_exists && $username_column_exists->num_rows > 0) {
-                $query .= ", username";
-            }
-            
-            $query .= ", created_at) VALUES (?, ?, ?, ?";
-            
-            // Tambahkan parameter untuk status jika ada
-            if ($status_column_exists && $status_column_exists->num_rows > 0) {
-                $query .= ", ?";
-            }
-            
-            // Tambahkan parameter untuk username jika ada
-            if ($username_column_exists && $username_column_exists->num_rows > 0) {
-                $query .= ", ?";
-            }
-            
-            $query .= ", NOW())";
+            // Simpan ke tabel orders dengan biaya_admin
+            $query = "INSERT INTO orders (nama, alamat, metode_pembayaran, total_harga, biaya_admin, status, username, created_at) 
+                     VALUES (?, ?, ?, ?, ?, 'processing', ?, NOW())";
             
             $stmt = $db->prepare($query);
             
-            // Buat array parameter
-            $params = [$nama, $alamat, $metode_pembayaran, $total_harga];
-            $types = "sssd"; // string, string, string, double
-            
-            // Tambahkan status jika ada
-            if ($status_column_exists && $status_column_exists->num_rows > 0) {
-                $params[] = "processing";
-                $types .= "s";
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $db->error);
             }
             
-            // Tambahkan username jika ada
-            if ($username_column_exists && $username_column_exists->num_rows > 0) {
-                $params[] = $username;
-                $types .= "s";
-            }
-            
-            // Bind parameters
-            $stmt->bind_param($types, ...$params);
+            $stmt->bind_param("sssdds", $nama, $alamat, $metode_pembayaran, $total_harga, $biaya_admin, $username);
 
             if ($stmt->execute()) {
-                $order_id = $db->insert_id; // Ambil ID pesanan
+                $order_id = $db->insert_id;
 
-                // Cek struktur tabel order_items
-                $check_gambar_column = "SHOW COLUMNS FROM order_items LIKE 'gambar_produk'";
-                $gambar_column_exists = $db->query($check_gambar_column);
-
-                // Simpan detail pesanan ke tabel order_items
+                // Simpan detail pesanan ke tabel order_items (tanpa gambar_produk)
                 foreach ($_SESSION['cart'] as $item) {
                     $produk_id = $item['id'];
                     $nama_produk = $item['nama'];
                     $harga = $item['harga'];
                     $jumlah = $item['jumlah'];
-                    $subtotal = $harga * $jumlah;
+                    $subtotal_item = $harga * $jumlah;
                     
-                    // Buat query berdasarkan struktur tabel
-                    if ($gambar_column_exists && $gambar_column_exists->num_rows > 0) {
+                    // Cek apakah kolom gambar_produk ada
+                    $check_column = "SHOW COLUMNS FROM order_items LIKE 'gambar_produk'";
+                    $column_exists = $db->query($check_column);
+                    
+                    if ($column_exists && $column_exists->num_rows > 0) {
                         // Jika kolom gambar_produk ada
                         $query_detail = "INSERT INTO order_items (order_id, produk_id, nama_produk, harga, jumlah, subtotal, gambar_produk) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?)";
                         $stmt_detail = $db->prepare($query_detail);
                         $gambar_produk = $item['gambar'];
-                        $stmt_detail->bind_param("iisdids", $order_id, $produk_id, $nama_produk, $harga, $jumlah, $subtotal, $gambar_produk);
+                        $stmt_detail->bind_param("iisdids", $order_id, $produk_id, $nama_produk, $harga, $jumlah, $subtotal_item, $gambar_produk);
                     } else {
                         // Jika kolom gambar_produk tidak ada
                         $query_detail = "INSERT INTO order_items (order_id, produk_id, nama_produk, harga, jumlah, subtotal) 
                                         VALUES (?, ?, ?, ?, ?, ?)";
                         $stmt_detail = $db->prepare($query_detail);
-                        $stmt_detail->bind_param("iisdid", $order_id, $produk_id, $nama_produk, $harga, $jumlah, $subtotal);
+                        $stmt_detail->bind_param("iisdid", $order_id, $produk_id, $nama_produk, $harga, $jumlah, $subtotal_item);
                     }
 
                     if (!$stmt_detail->execute()) {
@@ -227,7 +174,11 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 // Kosongkan keranjang setelah checkout
                 $_SESSION['cart'] = [];
-                echo json_encode(['success' => true, 'order_id' => $order_id]);
+                echo json_encode([
+                    'success' => true, 
+                    'order_id' => $order_id,
+                    'message' => 'Pesanan berhasil dibuat dengan ID: ' . $order_id
+                ]);
             } else {
                 throw new Exception("Gagal menyimpan pesanan: " . $db->error);
             }

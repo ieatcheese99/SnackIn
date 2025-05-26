@@ -1,6 +1,9 @@
 <?php
+// Cek akses admin
+require_once 'admin_check.php';
+requireAdmin();
+
 require "config/database.php";
-$queryProduk = mysqli_query($db, "SELECT id, nama, harga, gambar, deskripsi FROM barang LIMIT 6");
 
 // Query untuk mendapatkan data pesanan per hari (7 hari terakhir)
 $query = "SELECT DATE(created_at) as order_date, COUNT(*) as total 
@@ -13,15 +16,15 @@ $queryOrdersDaily = mysqli_query($db, $query);
 // Siapkan array untuk 7 hari terakhir
 $dates = [];
 $orderCounts = [];
-$orderRevenue = []; // Tambahkan array untuk revenue
+$orderRevenue = [];
 
 // Isi dengan data default (0 pesanan) untuk 7 hari terakhir
 for ($i = 6; $i >= 0; $i--) {
     $date = date('Y-m-d', strtotime("-$i days"));
-    $formattedDate = date('d M', strtotime($date)); // Format: 01 Jan
+    $formattedDate = date('d M', strtotime($date));
     $dates[] = $formattedDate;
     $orderCounts[$date] = 0;
-    $orderRevenue[$date] = 0; // Default revenue 0
+    $orderRevenue[$date] = 0;
 }
 
 // Isi data dari database
@@ -60,18 +63,19 @@ foreach (array_keys($orderCounts) as $date) {
 $datesJSON = json_encode($dates);
 $ordersDataJSON = json_encode($ordersData);
 $revenueDataJSON = json_encode($revenueData);
-?>
 
-<?php
-session_start();
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit();
-}
+// Statistik dashboard
+$total_orders = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(*) as total FROM orders"))['total'];
+$total_products = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(*) as total FROM barang"))['total'];
+$total_users = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(*) as total FROM user WHERE level = 'user'"))['total'];
+$total_revenue = mysqli_fetch_assoc(mysqli_query($db, "SELECT SUM(total_harga) as total FROM orders"))['total'] ?? 0;
+
+// Recent orders
+$recent_orders = mysqli_query($db, "SELECT * FROM orders ORDER BY created_at DESC LIMIT 5");
 ?>
 
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -80,137 +84,16 @@ if (!isset($_SESSION['username'])) {
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" integrity="sha384-dpuaG1suU0eT09tx5plTaGMLBsfDLzUCCUXOY2j/LSvXYuG6Bqs43ALlhIqAJVRb" crossorigin="anonymous">
-    <title>Finapp</title>
+    <title>Admin Dashboard - Snack In</title>
+    <meta name="description" content="Snack In Admin Dashboard">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png" sizes="32x32">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/icon/192x192.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="__manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .produk-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .produk-card {
-            width: 250px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .produk-card img {
-            width: 100%;
-            /* Sesuaikan dengan lebar card */
-            height: 200px;
-            /* Atur tinggi agar seragam */
-            object-fit: cover;
-            /* Memotong gambar agar tetap proporsional */
-            border-radius: 8px;
-            /* Bikin sudutnya lebih halus */
-        }
-
-        /* Main Header */
-        .main-header {
-            background-color: #00227c;
-            color: white;
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .main-header .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
-        }
-
-        .main-nav ul {
-            display: flex;
-            gap: 30px;
-        }
-
-        .main-nav a {
-            font-weight: 500;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-
-        .main-nav a:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .main-nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: white;
-            transition: width 0.3s ease;
-        }
-
-        .main-nav a:hover::after {
-            width: 100%;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .action-icon {
-            position: relative;
-            font-size: 18px;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .action-icon:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: white;
-            color: #00227c;
-            font-size: 10px;
-            font-weight: 600;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logout-icon {
-            color: #ff6b6b;
-        }
-
-        .mobile-menu-toggle {
-            display: none;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
         /* Styling untuk chart container */
         .chart-container {
             background: white;
@@ -219,9 +102,6 @@ if (!isset($_SESSION['username'])) {
             padding: 15px;
             margin-bottom: 20px;
             transition: all 0.3s ease;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .chart-header {
@@ -253,6 +133,11 @@ if (!isset($_SESSION['username'])) {
             transition: all 0.2s ease;
         }
 
+        .chart-type-btn.active {
+            background: #00227c;
+            color: white;
+        }
+
         .chart-stats {
             display: flex;
             gap: 10px;
@@ -280,37 +165,77 @@ if (!isset($_SESSION['username'])) {
             color: #666;
         }
 
+        /* Recent Orders Table */
+        .recent-orders {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .recent-orders h6 {
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: #00227c;
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 12px 8px;
+        }
+
+        .table td {
+            padding: 10px 8px;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .chart-stats {
                 flex-direction: column;
                 gap: 10px;
             }
+            
+            .table {
+                font-size: 0.7rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 4px;
+            }
         }
     </style>
-    <!--====== Google Font ======-->
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet">
-    <!--====== Vendor Css ======-->
-    <link rel="stylesheet" href="css/vendor.css">
-    <!--====== Utility-Spacing ======-->
-    <link rel="stylesheet" href="css/utility.css">
-    <!--====== App ======-->
-    <link rel="stylesheet" href="css/app.css">
-    <meta name="description" content="Finapp HTML Mobile Template">
-    <meta name="keywords"
-        content="bootstrap, wallet, banking, fintech mobile template, cordova, phonegap, mobile, html, responsive" />
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="__manifest.json">
-    <link rel="apple-touch-icon" href="assets/img/Modern Colorful Company Profile Presentation.png">
-    <link rel="shortcut icon" type="image/x-icon" href="assets/img/Modern Colorful Company Profile Presentation.png">
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/templatemo.css">
-    <link rel="stylesheet" href="assets/css/custom.css">
-    <!-- Load fonts style after rendering the layout styles -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
-    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -319,50 +244,28 @@ if (!isset($_SESSION['username'])) {
         <img src="assets/img/loading-icon.png" alt="icon" class="loading-icon">
     </div>
     <!-- * loader -->
+
     <!-- App Header -->
-   <header class="main-header">
-        <div class="container">
-            <a href="user_ui.php" class="logo">
-                <img src="assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
-                <span>SNACK IN</span>
+    <div class="appHeader bg-primary text-light">
+        <div class="left">
+            <a href="#" class="headerButton" data-bs-toggle="modal" data-bs-target="#sidebarPanel">
+                <ion-icon name="menu-outline"></ion-icon>
             </a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="user_ui.php">Home</a></li>
-                    <li><a href="about.php">About</a></li>
-                    <li><a href="#produk">Shop</a></li>
-                    <li><a href="#testimonials">Testimoni</a></li>
-                    <li><a href="#footer">Contact</a></li>
-                </ul>
-            </nav>
-            <div class="header-actions">
-                <div class="action-icon">
-                    <a href="include/cart.php">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="badge cart-count">0</span>
-                    </a>
-                </div>
-                <div class="action-icon">
-                    <a href="history.php">
-                        <i class="fas fa-history"></i>
-                    </a>
-                </div>
-                <?php if($isLoggedIn): ?>
-                <a href="logout.php" class="action-icon logout-icon">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-                <?php else: ?>
-                <a href="login.php" class="action-icon">
-                    <i class="fas fa-user"></i>
-                </a>
-                <?php endif; ?>
-                <div class="mobile-menu-toggle" id="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-            </div>
         </div>
-    </header>
+        <div class="pageTitle">
+            <img src="assets/img/logo.png" alt="logo" class="logo">
+        </div>
+        <div class="right">
+            <a href="user_ui.php" class="headerButton">
+                <ion-icon class="icon" name="globe-outline"></ion-icon>
+            </a>
+            <a href="logout.php" class="headerButton">
+                <ion-icon class="icon" name="log-out-outline"></ion-icon>
+            </a>
+        </div>
+    </div>
     <!-- * App Header -->
+
     <!-- App Capsule -->
     <div id="appCapsule">
         <!-- Wallet Card -->
@@ -371,13 +274,11 @@ if (!isset($_SESSION['username'])) {
                 <!-- Balance -->
                 <div class="balance">
                     <div class="left">
-                        <span class="title">Total Balance</span>
-                        <h1 class="total">Muhammad Zahir Siraj</h1>
+                        <span class="title">Admin Dashboard</span>
+                        <h1 class="total"><?php echo $_SESSION['username']; ?></h1>
                     </div>
                     <div class="right">
-                        <a href="#" class="button" data-bs-toggle="modal" data-bs-target="#depositActionSheet">
-                            <ion-icon name="add-outline"></ion-icon>
-                        </a>
+                        <span class="badge badge-success">Online</span>
                     </div>
                 </div>
                 <!-- * Balance -->
@@ -393,7 +294,7 @@ if (!isset($_SESSION['username'])) {
                     </div>
                     <div class="item">
                         <a href="kategori.php" style="text-decoration: none;">
-                            <div class="icon-wrapper">
+                            <div class="icon-wrapper bg-warning">
                                 <ion-icon name="list-outline"></ion-icon>
                             </div>
                             <strong>Kategori</strong>
@@ -401,7 +302,7 @@ if (!isset($_SESSION['username'])) {
                     </div>
                     <div class="item">
                         <a href="pesanan.php" style="text-decoration: none;">
-                            <div class="icon-wrapper bg-primary"> <!-- Warna biru -->
+                            <div class="icon-wrapper bg-primary">
                                 <ion-icon name="bag-outline"></ion-icon>
                             </div>
                             <strong>Pesanan</strong>
@@ -417,7 +318,7 @@ if (!isset($_SESSION['username'])) {
                     </div>
                     <div class="item">
                         <a href="history_admin.php" style="text-decoration: none;">
-                            <div class="icon-wrapper bg-success">
+                            <div class="icon-wrapper bg-info">
                                 <ion-icon name="time-outline"></ion-icon>
                             </div>
                             <strong>History</strong>
@@ -427,11 +328,41 @@ if (!isset($_SESSION['username'])) {
             </div>
         </div>
 
+        <!-- Stats Cards -->
+        <div class="section mt-2">
+            <div class="row">
+                <div class="col-6 mb-2">
+                    <div class="stat-box">
+                        <div class="title">Total Pesanan</div>
+                        <div class="value text-primary"><?php echo $total_orders; ?></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="stat-box">
+                        <div class="title">Total Produk</div>
+                        <div class="value text-success"><?php echo $total_products; ?></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="stat-box">
+                        <div class="title">Total User</div>
+                        <div class="value text-warning"><?php echo $total_users; ?></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="stat-box">
+                        <div class="title">Pendapatan</div>
+                        <div class="value text-danger">Rp <?php echo number_format($total_revenue, 0, ',', '.'); ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Orders Chart Section -->
-        <div class="section mt-4">
+        <div class="section mt-2">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title">Analisis Pesanan</h6>
+                    <h6 class="chart-title">Analisis Pesanan (7 Hari Terakhir)</h6>
                     <div class="chart-actions">
                         <button class="chart-type-btn active" data-chart-type="bar">Bar</button>
                         <button class="chart-type-btn" data-chart-type="line">Line</button>
@@ -442,111 +373,219 @@ if (!isset($_SESSION['username'])) {
 
                 <div class="chart-stats">
                     <div class="stat-card">
-                        <div class="stat-value" id="total-orders">0</div>
+                        <div class="stat-value" id="total-orders"><?php echo $total_orders; ?></div>
                         <div class="stat-label">Total Pesanan</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="total-revenue">Rp 0</div>
+                        <div class="stat-value" id="total-revenue">Rp <?php echo number_format($total_revenue, 0, ',', '.'); ?></div>
                         <div class="stat-label">Total Pendapatan</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="avg-order">Rp 0</div>
+                        <div class="stat-value" id="avg-order">Rp <?php echo $total_orders > 0 ? number_format($total_revenue / $total_orders, 0, ',', '.') : '0'; ?></div>
                         <div class="stat-label">Rata-rata Pesanan</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Exchange Action Sheet -->
-        <div class="modal fade action-sheet" id="exchangeActionSheet" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Exchange Money</h5>
-                    </div>
-                    <div class="modal-body">
-                        <div class="action-sheet-content">
-                            <form>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper">
-                                                <label class="label" for="currency1">From</label>
-                                                <select class="form-control custom-select" id="currency1">
-                                                    <option value="1">EUR</option>
-                                                    <option value="2">USD</option>
-                                                    <option value="3">AUD</option>
-                                                    <option value="4">CAD</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper">
-                                                <label class="label" for="currency2">To</label>
-                                                <select class="form-control custom-select" id="currency2">
-                                                    <option value="1">USD</option>
-                                                    <option value="1">EUR</option>
-                                                    <option value="2">AUD</option>
-                                                    <option value="3">CAD</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group basic">
-                                    <label class="label">Enter Amount</label>
-                                    <div class="input-group mb-2">
-                                        <span class="input-group-text" id="basic-addon2">$</span>
-                                        <input type="text" class="form-control" placeholder="Enter an amount"
-                                            value="100">
-                                    </div>
-                                </div>
-                                <div class="form-group basic">
-                                    <button type="button" class="btn btn-primary btn-block btn-lg"
-                                        data-bs-dismiss="modal">Exchange</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+        <!-- Recent Orders -->
+        <div class="section">
+            <div class="recent-orders">
+                <h6><i class="fas fa-clock"></i> Pesanan Terbaru</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pelanggan</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($recent_orders && mysqli_num_rows($recent_orders) > 0): ?>
+                                <?php while ($order = mysqli_fetch_assoc($recent_orders)): ?>
+                                <tr>
+                                    <td>#<?php echo $order['id']; ?></td>
+                                    <td><?php echo htmlspecialchars($order['nama']); ?></td>
+                                    <td>Rp <?php echo number_format($order['total_harga'], 0, ',', '.'); ?></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <?php echo ucfirst($order['status'] ?? 'pending'); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">Belum ada pesanan</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <!-- * Exchange Action Sheet -->
-        <!-- Stats -->
-        <!-- * Stats -->
-        <!-- Transactions -->
-        <!-- * Transactions -->
-        <!-- my cards -->
-        <!-- * my cards -->
-        <!-- Send Money -->
-        <!-- * Send Money -->
-        <!-- Monthly Bills -->
-        <!-- * Monthly Bills -->
-        <!-- Saving Goals -->
-        <!-- * Saving Goals -->
-        <!-- News -->
-        <!-- * News -->
-        <!-- app footer -->
-        <!-- * app footer -->
     </div>
     <!-- * App Capsule -->
-    <?php include "include/content.php" ?>
-    <?php include "include/footer.php" ?>
+
     <!-- App Bottom Menu -->
-    <?php include "include/bottom_menu.php" ?>
+    <div class="appBottomMenu">
+        <a href="index.php" class="item active">
+            <div class="col">
+                <ion-icon name="pie-chart-outline"></ion-icon>
+                <strong>Dashboard</strong>
+            </div>
+        </a>
+        <a href="data_barang.php" class="item">
+            <div class="col">
+                <ion-icon name="cube-outline"></ion-icon>
+                <strong>Produk</strong>
+            </div>
+        </a>
+        <a href="pesanan.php" class="item">
+            <div class="col">
+                <ion-icon name="bag-outline"></ion-icon>
+                <strong>Pesanan</strong>
+            </div>
+        </a>
+        <a href="user.php" class="item">
+            <div class="col">
+                <ion-icon name="people-outline"></ion-icon>
+                <strong>User</strong>
+            </div>
+        </a>
+        <a href="logout.php" class="item">
+            <div class="col">
+                <ion-icon name="log-out-outline"></ion-icon>
+                <strong>Logout</strong>
+            </div>
+        </a>
+    </div>
     <!-- * App Bottom Menu -->
+
     <!-- App Sidebar -->
-    <?php include "include/sidebar.php" ?>
+    <div class="modal fade panelModal panelModalLeft" id="sidebarPanel" tabindex="-1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <!-- profile box -->
+                    <div class="profileBox pt-2 pb-2">
+                        <div class="image-wrapper">
+                            <img src="assets/img/sample/avatar/avatar1.jpg" alt="image" class="imaged  w36">
+                        </div>
+                        <div class="in">
+                            <strong><?php echo $_SESSION['username']; ?></strong>
+                            <div class="text-muted">Administrator</div>
+                        </div>
+                        <a href="#" class="btn btn-link btn-icon sidebar-close" data-bs-dismiss="modal">
+                            <ion-icon name="close-outline"></ion-icon>
+                        </a>
+                    </div>
+                    <!-- * profile box -->
+                    <!-- menu -->
+                    <div class="listview-title mt-1">Menu</div>
+                    <ul class="listview flush transparent no-line image-listview">
+                        <li>
+                            <a href="index.php" class="item">
+                                <div class="icon-box bg-primary">
+                                    <ion-icon name="pie-chart-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Dashboard
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="data_barang.php" class="item">
+                                <div class="icon-box bg-danger">
+                                    <ion-icon name="cube-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Data Barang
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="kategori.php" class="item">
+                                <div class="icon-box bg-warning">
+                                    <ion-icon name="list-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Kategori
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="pesanan.php" class="item">
+                                <div class="icon-box bg-success">
+                                    <ion-icon name="bag-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Pesanan
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="user.php" class="item">
+                                <div class="icon-box bg-info">
+                                    <ion-icon name="people-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    User Management
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="history_admin.php" class="item">
+                                <div class="icon-box bg-secondary">
+                                    <ion-icon name="time-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    History
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                    <!-- * menu -->
+
+                    <!-- others -->
+                    <div class="listview-title mt-1">Others</div>
+                    <ul class="listview flush transparent no-line image-listview">
+                        <li>
+                            <a href="user_ui.php" class="item">
+                                <div class="icon-box bg-primary">
+                                    <ion-icon name="globe-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Lihat Website
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="logout.php" class="item">
+                                <div class="icon-box bg-danger">
+                                    <ion-icon name="log-out-outline"></ion-icon>
+                                </div>
+                                <div class="in">
+                                    Logout
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                    <!-- * others -->
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- * App Sidebar -->
-    <!-- iOS Add to Home Action Sheet -->
-    <?php include "include/ios_home.php" ?>
-    <!-- * iOS Add to Home Action Sheet -->
-    <!-- Android Add to Home Action Sheet -->
-    <?php include "include/android_home.php" ?>
-    <!-- * Android Add to Home Action Sheet -->
-    +
+
     <!-- ========= JS Files =========  -->
     <!-- Bootstrap -->
     <script src="assets/js/lib/bootstrap.bundle.min.js"></script>
@@ -556,17 +595,7 @@ if (!isset($_SESSION['username'])) {
     <script src="assets/js/plugins/splide/splide.min.js"></script>
     <!-- Base Js File -->
     <script src="assets/js/base.js"></script>
-    <script>
-        // Add to Home with 2 seconds delay.
-        AddtoHome("2000", "once");
-    </script>
-    <!-- Start Script -->
-    <script src="assets/js/jquery-1.11.0.min.js"></script>
-    <script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/templatemo.js"></script>
-    <script src="assets/js/custom.js"></script>
-    <!-- End Script -->
+
     <!-- Chart.js Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -579,21 +608,9 @@ if (!isset($_SESSION['username'])) {
             const orderCounts = <?php echo $ordersDataJSON; ?>;
             const revenueData = <?php echo $revenueDataJSON; ?>;
 
-            // Hitung total pesanan
-            const totalOrders = orderCounts.reduce((sum, count) => sum + count, 0);
-            document.getElementById('total-orders').textContent = totalOrders;
-
-            // Hitung total revenue
-            const totalRevenue = revenueData.reduce((sum, revenue) => sum + revenue, 0);
-            document.getElementById('total-revenue').textContent = 'Rp ' + formatNumber(totalRevenue);
-
-            // Hitung rata-rata pesanan
-            const avgOrder = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
-            document.getElementById('avg-order').textContent = 'Rp ' + formatNumber(avgOrder);
-
             // Buat gradien untuk chart
             const ctx = document.getElementById('ordersChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 150); // Match to canvas height
+            const gradient = ctx.createLinearGradient(0, 0, 0, 150);
             gradient.addColorStop(0, 'rgba(0, 34, 124, 0.7)');
             gradient.addColorStop(1, 'rgba(0, 34, 124, 0.1)');
 
@@ -614,8 +631,8 @@ if (!isset($_SESSION['username'])) {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true, // Changed to true to prevent height issues
-                    aspectRatio: 2, // Width:height ratio
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
                     animation: {
                         duration: 800,
                         easing: 'easeOutQuart'
@@ -747,6 +764,9 @@ if (!isset($_SESSION['username'])) {
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
         });
+
+        // Add to Home with 2 seconds delay.
+        AddtoHome("2000", "once");
     </script>
 </body>
 
