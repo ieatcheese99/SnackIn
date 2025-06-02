@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'koneksi.php';
+include 'database.php';
 
 // Function to validate and sanitize input
 function sanitizeInput($data) {
@@ -11,182 +11,177 @@ function sanitizeInput($data) {
 }
 
 // Check if user is logged in
-if (!isset($_SESSION['id_user'])) {
-    echo json_encode(['status' => 'error', 'message' => 'User not logged in']);
+if (!isset($_SESSION['username'])) {
+    echo json_encode(['success' => false, 'message' => 'User not logged in']);
     exit;
 }
 
-$id_user = $_SESSION['id_user'];
+$username = $_SESSION['username'];
 
-// Add to cart action
-if (isset($_POST['add_to_cart'])) {
-    $id_produk = sanitizeInput($_POST['id_produk']);
-    $jumlah = sanitizeInput($_POST['jumlah']);
-    
-    // Validate input
-    if (empty($id_produk) || empty($jumlah) || !is_numeric($jumlah) || $jumlah <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Invalid input data']);
-        exit;
-    }
-    
-    try {
-        // Check if product exists
-        $check_product = mysqli_query($koneksi, "SELECT * FROM data_produk2 WHERE id_produk = '$id_produk'");
-        
-        if (mysqli_num_rows($check_product) == 0) {
-            echo json_encode(['status' => 'error', 'message' => 'Product not found']);
-            exit;
-        }
-        
-        // Check if product already in cart
-        $check_cart = mysqli_query($koneksi, "SELECT * FROM cart WHERE id_user = '$id_user' AND id_produk = '$id_produk'");
-        
-        if (mysqli_num_rows($check_cart) > 0) {
-            // Update quantity if product already in cart
-            $update = mysqli_query($koneksi, "UPDATE cart SET jumlah = jumlah + $jumlah WHERE id_user = '$id_user' AND id_produk = '$id_produk'");
-            
-            if ($update) {
-                echo json_encode(['status' => 'success', 'message' => 'Product quantity updated in cart']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to update cart: ' . mysqli_error($koneksi)]);
-            }
-        } else {
-            // Add new product to cart
-            $insert = mysqli_query($koneksi, "INSERT INTO cart (id_user, id_produk, jumlah) VALUES ('$id_user', '$id_produk', '$jumlah')");
-            
-            if ($insert) {
-                echo json_encode(['status' => 'success', 'message' => 'Product added to cart']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to add to cart: ' . mysqli_error($koneksi)]);
-            }
-        }
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
-    }
-    exit;
-}
+// Get user ID
+$userQuery = mysqli_query($db, "SELECT id FROM users WHERE username = '$username'");
+$userData = mysqli_fetch_assoc($userQuery);
+$userId = $userData['id'];
 
-// Update cart quantity
-if (isset($_POST['update_cart'])) {
-    $id_cart = sanitizeInput($_POST['id_cart']);
-    $jumlah = sanitizeInput($_POST['jumlah']);
+// Handle different actions
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
     
-    // Validate input
-    if (empty($id_cart) || empty($jumlah) || !is_numeric($jumlah)) {
-        echo json_encode(['status' => 'error', 'message' => 'Invalid input data']);
-        exit;
-    }
-    
-    try {
-        if ($jumlah <= 0) {
-            // Remove item if quantity is 0 or less
-            $delete = mysqli_query($koneksi, "DELETE FROM cart WHERE id_cart = '$id_cart' AND id_user = '$id_user'");
+    switch ($action) {
+        case 'add':
+            $productId = sanitizeInput($_POST['id']);
+            $quantity = (int)sanitizeInput($_POST['quantity']);
             
-            if ($delete) {
-                echo json_encode(['status' => 'success', 'message' => 'Item removed from cart']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to remove item: ' . mysqli_error($koneksi)]);
+            if ($quantity <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Invalid quantity']);
+                exit;
             }
-        } else {
-            // Update quantity
-            $update = mysqli_query($koneksi, "UPDATE cart SET jumlah = '$jumlah' WHERE id_cart = '$id_cart' AND id_user = '$id_user'");
             
-            if ($update) {
-                echo json_encode(['status' => 'success', 'message' => 'Cart updated']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to update cart: ' . mysqli_error($koneksi)]);
+            // Check product stock
+            $stockQuery = mysqli_query($db, "SELECT Stok FROM barang WHERE id = '$productId'");
+            $stockData = mysqli_fetch_assoc($stockQuery);
+            
+            if (!$stockData) {
+                echo json_encode(['success' => false, 'message' => 'Product not found']);
+                exit;
             }
-        }
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
-    }
-    exit;
-}
-
-// Remove from cart
-if (isset($_POST['remove_from_cart'])) {
-    $id_cart = sanitizeInput($_POST['id_cart']);
-    
-    try {
-        $delete = mysqli_query($koneksi, "DELETE FROM cart WHERE id_cart = '$id_cart' AND id_user = '$id_user'");
-        
-        if ($delete) {
-            echo json_encode(['status' => 'success', 'message' => 'Item removed from cart']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to remove item: ' . mysqli_error($koneksi)]);
-        }
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
-    }
-    exit;
-}
-
-// Checkout cart
-if (isset($_POST['checkout'])) {
-    try {
-        // Get cart items
-        $cart_query = mysqli_query($koneksi, "SELECT c.*, p.nama_produk, p.harga FROM cart c 
-                                             JOIN data_produk2 p ON c.id_produk = p.id_produk 
-                                             WHERE c.id_user = '$id_user'");
-        
-        if (mysqli_num_rows($cart_query) == 0) {
-            echo json_encode(['status' => 'error', 'message' => 'Cart is empty']);
-            exit;
-        }
-        
-        // Create order
-        $order_date = date('Y-m-d H:i:s');
-        $total_amount = 0;
-        
-        // Calculate total amount
-        while ($cart_item = mysqli_fetch_assoc($cart_query)) {
-            $total_amount += $cart_item['harga'] * $cart_item['jumlah'];
-        }
-        
-        // Reset pointer
-        mysqli_data_seek($cart_query, 0);
-        
-        // Insert into orders table
-        $insert_order = mysqli_query($koneksi, "INSERT INTO orders (id_user, order_date, total_amount, status) 
-                                               VALUES ('$id_user', '$order_date', '$total_amount', 'pending')");
-        
-        if ($insert_order) {
-            $order_id = mysqli_insert_id($koneksi);
             
-            // Insert order items
-            while ($cart_item = mysqli_fetch_assoc($cart_query)) {
-                $id_produk = $cart_item['id_produk'];
-                $jumlah = $cart_item['jumlah'];
-                $harga = $cart_item['harga'];
-                
-                $insert_item = mysqli_query($koneksi, "INSERT INTO order_items (order_id, id_produk, quantity, price) 
-                                                      VALUES ('$order_id', '$id_produk', '$jumlah', '$harga')");
-                
-                if (!$insert_item) {
-                    // Rollback if item insertion fails
-                    mysqli_query($koneksi, "DELETE FROM orders WHERE id = '$order_id'");
-                    echo json_encode(['status' => 'error', 'message' => 'Failed to create order items: ' . mysqli_error($koneksi)]);
-                    exit;
+            if ($stockData['Stok'] < $quantity) {
+                echo json_encode(['success' => false, 'message' => 'Insufficient stock']);
+                exit;
+            }
+            
+            // Check if item already in cart
+            if (!isset($_SESSION['cart'])) {
+                $_SESSION['cart'] = [];
+            }
+            
+            $found = false;
+            foreach ($_SESSION['cart'] as &$item) {
+                if ($item['id'] == $productId) {
+                    $item['quantity'] += $quantity;
+                    $found = true;
+                    break;
                 }
             }
             
-            // Clear cart after successful order
-            $clear_cart = mysqli_query($koneksi, "DELETE FROM cart WHERE id_user = '$id_user'");
-            
-            if ($clear_cart) {
-                echo json_encode(['status' => 'success', 'message' => 'Order placed successfully', 'order_id' => $order_id]);
-            } else {
-                echo json_encode(['status' => 'warning', 'message' => 'Order placed but failed to clear cart: ' . mysqli_error($koneksi), 'order_id' => $order_id]);
+            if (!$found) {
+                $_SESSION['cart'][] = [
+                    'id' => $productId,
+                    'nama' => $_POST['nama'],
+                    'harga' => $_POST['harga'],
+                    'gambar' => $_POST['gambar'],
+                    'quantity' => $quantity
+                ];
             }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to create order: ' . mysqli_error($koneksi)]);
-        }
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+            
+            // Update stock in database
+            $newStock = $stockData['Stok'] - $quantity;
+            mysqli_query($db, "UPDATE barang SET Stok = '$newStock' WHERE id = '$productId'");
+            
+            echo json_encode(['success' => true, 'message' => 'Product added to cart']);
+            break;
+            
+        case 'count':
+            $count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
+            echo $count;
+            break;
+            
+        case 'remove':
+            $productId = sanitizeInput($_POST['id']);
+            
+            if (isset($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as $key => $item) {
+                    if ($item['id'] == $productId) {
+                        // Restore stock
+                        $quantity = $item['quantity'];
+                        mysqli_query($db, "UPDATE barang SET Stok = Stok + '$quantity' WHERE id = '$productId'");
+                        
+                        unset($_SESSION['cart'][$key]);
+                        $_SESSION['cart'] = array_values($_SESSION['cart']); // Reindex array
+                        break;
+                    }
+                }
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Item removed from cart']);
+            break;
+            
+        case 'update':
+            $productId = sanitizeInput($_POST['id']);
+            $newQuantity = (int)sanitizeInput($_POST['quantity']);
+            
+            if (isset($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as &$item) {
+                    if ($item['id'] == $productId) {
+                        $oldQuantity = $item['quantity'];
+                        $difference = $newQuantity - $oldQuantity;
+                        
+                        // Check stock availability
+                        $stockQuery = mysqli_query($db, "SELECT Stok FROM barang WHERE id = '$productId'");
+                        $stockData = mysqli_fetch_assoc($stockQuery);
+                        
+                        if ($difference > 0 && $stockData['Stok'] < $difference) {
+                            echo json_encode(['success' => false, 'message' => 'Insufficient stock']);
+                            exit;
+                        }
+                        
+                        // Update cart and stock
+                        $item['quantity'] = $newQuantity;
+                        mysqli_query($db, "UPDATE barang SET Stok = Stok - '$difference' WHERE id = '$productId'");
+                        
+                        if ($newQuantity <= 0) {
+                            unset($_SESSION['cart'][array_search($item, $_SESSION['cart'])]);
+                            $_SESSION['cart'] = array_values($_SESSION['cart']);
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Cart updated']);
+            break;
+            
+        case 'checkout':
+            if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+                echo json_encode(['success' => false, 'message' => 'Cart is empty']);
+                exit;
+            }
+            
+            // Calculate total
+            $total = 0;
+            foreach ($_SESSION['cart'] as $item) {
+                $total += $item['harga'] * $item['quantity'];
+            }
+            
+            // Create order record (you can expand this based on your order table structure)
+            $orderDate = date('Y-m-d H:i:s');
+            $orderQuery = "INSERT INTO orders (user_id, total_amount, order_date, status) VALUES ('$userId', '$total', '$orderDate', 'pending')";
+            
+            if (mysqli_query($db, $orderQuery)) {
+                $orderId = mysqli_insert_id($db);
+                
+                // Insert order items
+                foreach ($_SESSION['cart'] as $item) {
+                    $itemQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ('$orderId', '{$item['id']}', '{$item['quantity']}', '{$item['harga']}')";
+                    mysqli_query($db, $itemQuery);
+                }
+                
+                // Clear cart
+                unset($_SESSION['cart']);
+                
+                echo json_encode(['success' => true, 'message' => 'Order placed successfully', 'order_id' => $orderId]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to place order']);
+            }
+            break;
+            
+        default:
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            break;
     }
-    exit;
+} else {
+    echo json_encode(['success' => false, 'message' => 'No action specified']);
 }
-
-// Default response for invalid requests
-echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
 ?>

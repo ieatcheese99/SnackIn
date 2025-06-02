@@ -17,57 +17,26 @@ function requireAdmin() {
 
 requireAdmin();
 
-// Handle filtering
-$where_conditions = [];
-$params = [];
-$types = '';
-
-if (isset($_GET['kategori']) && !empty($_GET['kategori'])) {
-    $where_conditions[] = "b.kategori_id = ?";
-    $params[] = $_GET['kategori'];
-    $types .= 'i';
-}
-
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $where_conditions[] = "b.nama LIKE ?";
-    $params[] = '%' . $_GET['search'] . '%';
-    $types .= 's';
-}
-
-// Build the main query with proper column names
+// Build the main query with proper column names - NO FILTERS
 $query = "SELECT b.id, b.nama, b.Deskripsi, b.Stok as stok, b.Harga as harga, b.gambar, b.kategori_id, k.nama as kategori_nama 
           FROM barang b 
-          LEFT JOIN kategori k ON b.kategori_id = k.id";
+          LEFT JOIN kategori k ON b.kategori_id = k.id
+          ORDER BY b.id DESC";
 
-if (!empty($where_conditions)) {
-    $query .= " WHERE " . implode(" AND ", $where_conditions);
-}
-
-$query .= " ORDER BY b.id DESC";
-
-// Execute query with prepared statement if there are parameters
-if (!empty($params)) {
-    $stmt = mysqli_prepare($db, $query);
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, $types, ...$params);
-        mysqli_stmt_execute($stmt);
-        $products = mysqli_stmt_get_result($stmt);
-    } else {
-        $products = mysqli_query($db, $query);
-    }
-} else {
-    $products = mysqli_query($db, $query);
-}
-
-// Get categories for filter
-$categories_query = "SELECT * FROM kategori ORDER BY nama";
-$categories = mysqli_query($db, $categories_query);
+$products = mysqli_query($db, $query);
 
 $page_title = "Data Barang";
 include 'include/admin_header.php';
 ?>
 
 <style>
+    :root {
+        --orange-primary: #ff9800;
+        --orange-secondary: #f57c00;
+        --orange-light: #ffb74d;
+        --orange-dark: #e65100;
+    }
+
     .product-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -103,7 +72,7 @@ include 'include/admin_header.php';
 
     .product-category {
         display: inline-block;
-        background: #00227c;
+        background: var(--orange-primary);
         color: white;
         padding: 5px 12px;
         border-radius: 20px;
@@ -128,7 +97,7 @@ include 'include/admin_header.php';
     .product-price {
         font-size: 20px;
         font-weight: 800;
-        color: #00227c;
+        color: var(--orange-primary);
         margin-bottom: 15px;
     }
 
@@ -197,29 +166,29 @@ include 'include/admin_header.php';
     }
 
     .btn-edit {
-        background: #f59e0b;
+        background: var(--orange-primary);
         color: white;
     }
 
     .btn-edit:hover {
-        background: #d97706;
+        background: var(--orange-secondary);
         transform: translateY(-2px);
         color: white;
     }
 
     .btn-delete {
-        background: #ef4444;
+        background: var(--orange-dark);
         color: white;
     }
 
     .btn-delete:hover {
-        background: #dc2626;
+        background: #d84315;
         transform: translateY(-2px);
         color: white;
     }
 
     .btn-add {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: var(--orange-primary);
         color: white;
         padding: 12px 25px;
         border-radius: 8px;
@@ -230,96 +199,9 @@ include 'include/admin_header.php';
     }
 
     .btn-add:hover {
+        background: var(--orange-secondary);
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        color: white;
-    }
-
-    .filters {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .filter-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 15px;
-        color: #333;
-    }
-
-    .filter-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        align-items: end;
-    }
-
-    .filter-group {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .filter-label {
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        color: #666;
-        display: block;
-    }
-
-    .filter-control {
-        width: 100%;
-        padding: 10px 15px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .filter-control:focus {
-        border-color: #00227c;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 34, 124, 0.1);
-    }
-
-    .filter-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn-filter {
-        background: #00227c;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-filter:hover {
-        background: #1e40af;
-        transform: translateY(-2px);
-    }
-
-    .btn-reset {
-        background: #6b7280;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-
-    .btn-reset:hover {
-        background: #4b5563;
-        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
         color: white;
     }
 
@@ -331,13 +213,13 @@ include 'include/admin_header.php';
     }
 
     .stat-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
         border-radius: 12px;
         padding: 20px;
         text-align: center;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-left: 5px solid #00227c;
-        transition: var(--transition);
+        border-left: 5px solid var(--orange-primary);
+        transition: all 0.3s ease;
     }
 
     .stat-card:hover {
@@ -348,7 +230,7 @@ include 'include/admin_header.php';
     .stat-number {
         font-size: 32px;
         font-weight: 800;
-        color: #00227c;
+        color: var(--orange-primary);
         display: block;
     }
 
@@ -387,27 +269,56 @@ include 'include/admin_header.php';
         font-size: 14px;
     }
 
+    .page-header {
+        background: linear-gradient(135deg, var(--orange-primary) 0%, var(--orange-secondary) 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+
+    .nav-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .nav-btn {
+        background: white;
+        color: var(--orange-primary);
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid var(--orange-primary);
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+        background: var(--orange-primary);
+        color: white;
+    }
+
     @media (max-width: 768px) {
         .product-grid {
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
         
-        .filter-form {
+        .nav-buttons {
             flex-direction: column;
-        }
-        
-        .filter-group {
-            min-width: 100%;
-        }
-
-        .filter-actions {
-            width: 100%;
-            justify-content: stretch;
-        }
-
-        .btn-filter, .btn-reset {
-            flex: 1;
         }
     }
 
@@ -482,51 +393,9 @@ include 'include/admin_header.php';
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="filters">
-            <div class="filter-title">
-                <i class="fas fa-filter"></i> Filter Produk
-            </div>
-            <form class="filter-form" method="GET">
-                <div class="filter-group">
-                    <label class="filter-label">Kategori</label>
-                    <select name="kategori" class="filter-control">
-                        <option value="">Semua Kategori</option>
-                        <?php 
-                        if ($categories) {
-                            mysqli_data_seek($categories, 0);
-                            while ($category = mysqli_fetch_assoc($categories)): 
-                        ?>
-                            <option value="<?php echo $category['id']; ?>" 
-                                    <?php echo (isset($_GET['kategori']) && $_GET['kategori'] == $category['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category['nama']); ?>
-                            </option>
-                        <?php 
-                            endwhile; 
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Cari Produk</label>
-                    <input type="text" name="search" class="filter-control" 
-                           placeholder="Nama produk..." 
-                           value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-                </div>
-                <div class="filter-actions">
-                    <button type="submit" class="btn-filter">
-                        <i class="fas fa-search"></i> Filter
-                    </button>
-                    <a href="data_barang.php" class="btn-reset">
-                        <i class="fas fa-undo"></i> Reset
-                    </a>
-                </div>
-            </form>
-        </div>
-
         <!-- Action Buttons -->
         <div class="mb-4">
-            <a href="form-tambah.php" class="btn-add">
+            <a href="form_tambah.php" class="btn-add">
                 <i class="fas fa-plus-circle"></i> Tambah Produk Baru
             </a>
         </div>
@@ -546,6 +415,18 @@ include 'include/admin_header.php';
                     $product_category = $product['kategori_nama'] ?? 'Tanpa Kategori';
                     $product_description = $product['Deskripsi'] ?? '';
                     
+                    // Fix image path - handle both cases
+                    $image_path = '';
+                    if (!empty($product_image)) {
+                        // If path already contains 'uploads/', use as is
+                        if (strpos($product_image, 'uploads/') === 0) {
+                            $image_path = $product_image;
+                        } else {
+                            // Add 'uploads/' prefix
+                            $image_path = 'uploads/' . $product_image;
+                        }
+                    }
+                    
                     // Determine stock status
                     $stock_status = '';
                     $stock_class = '';
@@ -561,15 +442,16 @@ include 'include/admin_header.php';
                     }
                 ?>
                     <div class="product-card">
-                        <?php if (!empty($product_image) && file_exists('uploads/' . $product_image)): ?>
-                            <img src="uploads/<?php echo htmlspecialchars($product_image); ?>" 
+                        <?php if (!empty($image_path) && file_exists($image_path)): ?>
+                            <img src="<?php echo htmlspecialchars($image_path); ?>" 
                                  alt="<?php echo htmlspecialchars($product_name); ?>" 
-                                 class="product-image">
-                        <?php else: ?>
-                            <div class="product-image" style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); display: flex; align-items: center; justify-content: center; color: #999;">
-                                <i class="fas fa-image" style="font-size: 48px;"></i>
-                            </div>
+                                 class="product-image"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <?php endif; ?>
+                        
+                        <div class="product-image" style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); display: <?php echo (!empty($image_path) && file_exists($image_path)) ? 'none' : 'flex'; ?>; align-items: center; justify-content: center; color: #999;">
+                            <i class="fas fa-image" style="font-size: 48px;"></i>
+                        </div>
                         
                         <div class="product-content">
                             <div class="product-category">
@@ -610,20 +492,8 @@ include 'include/admin_header.php';
         <?php else: ?>
             <div class="no-products">
                 <i class="fas fa-box-open"></i>
-                <h5>
-                    <?php if (isset($_GET['search']) || isset($_GET['kategori'])): ?>
-                        Tidak ada produk yang sesuai dengan filter
-                    <?php else: ?>
-                        Belum ada produk
-                    <?php endif; ?>
-                </h5>
-                <p>
-                    <?php if (isset($_GET['search']) || isset($_GET['kategori'])): ?>
-                        Coba ubah filter pencarian atau tambahkan produk baru
-                    <?php else: ?>
-                        Produk akan muncul di sini setelah ditambahkan
-                    <?php endif; ?>
-                </p>
+                <h5>Belum ada produk</h5>
+                <p>Produk akan muncul di sini setelah ditambahkan</p>
             </div>
         <?php endif; ?>
     </div>
@@ -695,7 +565,7 @@ include 'include/admin_header.php';
                         <button id="confirmDelete" style="
                             padding: 10px 20px;
                             border: none;
-                            background: #ef4444;
+                            background: #ff9800;
                             color: white;
                             border-radius: 8px;
                             cursor: pointer;
@@ -716,7 +586,6 @@ include 'include/admin_header.php';
             // Handle confirm
             confirmDialog.querySelector('#confirmDelete').addEventListener('click', () => {
                 document.body.removeChild(confirmDialog);
-                showLoading();
                 window.location.href = deleteUrl;
             });
             
@@ -732,18 +601,9 @@ include 'include/admin_header.php';
     // Add loading animation for actions
     document.querySelectorAll('.btn-edit, .btn-add').forEach(button => {
         button.addEventListener('click', function() {
-            showLoading();
+            // Show loading indicator
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
         });
-    });
-
-    // Filter form loading
-    document.querySelector('.filter-form').addEventListener('submit', function() {
-        showLoading();
-    });
-
-    // Auto-submit filter form when category changes
-    document.querySelector('select[name="kategori"]').addEventListener('change', function() {
-        this.form.submit();
     });
 </script>
 

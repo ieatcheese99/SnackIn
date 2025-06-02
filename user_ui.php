@@ -85,8 +85,14 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         }
 
         .btn:hover {
-            background-color: #00227c;
+            background-color: #001a5e;
             transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .section-title {
@@ -291,6 +297,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             font-size: 2rem;
             font-weight: bold;
             margin-bottom: 20px;
+            color: #00227c;
         }
 
         /* Category Filter */
@@ -323,33 +330,36 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         }
 
         .produk-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: center;
-            max-width: 1100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .produk-card {
-            width: 250px;
-            height: 100%;
             border: 2px solid #ddd;
             border-radius: 12px;
             padding: 20px;
             text-align: center;
             background: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out;
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            width: calc(33.33% - 16px);
-            max-width: 250px;
+            position: relative;
+            overflow: hidden;
         }
 
         .produk-card:hover {
-            transform: scale(1.05);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .produk-card .image-container {
+            position: relative;
+            margin-bottom: 15px;
         }
 
         .produk-card img {
@@ -360,39 +370,58 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         }
 
         .produk-card h3 {
-            margin: 10px 0;
+            margin: 15px 0 10px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
         }
 
-        .produk-card p {
-            flex-grow: 1;
+        .produk-card .price {
+            color: #00227c;
+            font-size: 1.3rem;
+            font-weight: 700;
             margin-bottom: 10px;
         }
 
-        .produk-card button {
-            margin-top: auto;
+        .produk-card .description {
+            color: #666;
+            margin-bottom: 15px;
+            flex-grow: 1;
+            line-height: 1.5;
         }
 
         .category-badge {
             position: absolute;
             top: 10px;
             right: 10px;
-            background-color: rgba(246, 158, 34, 0.8);
+            background-color: rgba(246, 158, 34, 0.9);
             color: white;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            z-index: 2;
         }
 
         .stock-info {
             color: #666;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
         }
 
         .stock-low {
             color: #ff6b6b;
             font-weight: bold;
+            background-color: #fff5f5;
+        }
+
+        .stock-out {
+            color: #dc3545;
+            font-weight: bold;
+            background-color: #f8d7da;
         }
 
         /* Cart Popup Styles */
@@ -847,7 +876,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
         .testimonials-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 40px;
         }
 
@@ -914,7 +943,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
         .footer-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 40px;
             margin-bottom: 40px;
         }
@@ -1031,16 +1060,8 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 font-size: 1.1rem;
             }
 
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .testimonials-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .produk-card {
-                width: calc(50% - 16px);
+            .produk-container {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             }
         }
 
@@ -1084,18 +1105,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 max-height: 180px;
             }
 
-            .testimonials-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .produk-card {
-                width: calc(50% - 16px);
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
+            .produk-container {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 15px;
             }
 
             .cart-popup-content {
@@ -1118,9 +1130,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         }
 
         @media (max-width: 576px) {
-            .produk-card {
-                width: 100%;
-                max-width: 300px;
+            .produk-container {
+                grid-template-columns: 1fr;
+                padding: 0 10px;
             }
 
             .hero-content h1 {
@@ -1143,6 +1155,15 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
             .hero-image img {
                 max-height: 140px;
+            }
+
+            .category-filter {
+                gap: 10px;
+            }
+
+            .category-btn {
+                padding: 6px 15px;
+                font-size: 14px;
             }
         }
     </style>
@@ -1304,32 +1325,40 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             <?php 
             mysqli_data_seek($queryKategori, 0); // Reset pointer
             while ($kategori = mysqli_fetch_assoc($queryKategori)) { ?>
-                <button class="category-btn" data-category="<?php  { ?>
-                <button class="category-btn" data-category="<?php echo $kategori['nama']; ?>"><?php echo $kategori['nama']; ?></button>
+                <button class="category-btn" data-category="<?php echo htmlspecialchars($kategori['nama']); ?>">
+                    <?php echo htmlspecialchars($kategori['nama']); ?>
+                </button>
             <?php } ?>
         </div>
 
         <div class="produk-container" id="produk-container">
             <!-- Products will be loaded dynamically from PHP -->
             <?php while ($row = mysqli_fetch_assoc($queryProduk)) { ?>
-                <div class="produk-card" data-category="<?php echo $row['kategori']; ?>">
-                    <div style="position: relative;">
-                        <img src="<?php echo $row['gambar']; ?>" alt="<?php echo $row['nama']; ?>" class="produk-img">
-                        <span class="category-badge"><?php echo $row['kategori']; ?></span>
+                <div class="produk-card" data-category="<?php echo htmlspecialchars($row['kategori']); ?>">
+                    <div class="image-container">
+                        <img src="<?php echo htmlspecialchars($row['gambar']); ?>" alt="<?php echo htmlspecialchars($row['nama']); ?>" class="produk-img">
+                        <span class="category-badge"><?php echo htmlspecialchars($row['kategori']); ?></span>
                     </div>
-                    <h3><?php echo $row['nama']; ?></h3>
-                    <p style="color: green;">Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?></p>
-                    <p><?php echo substr($row['deskripsi'], 0, 50); ?>...</p>
-                    <div class="stock-info <?php echo $row['Stok'] <= 5 ? 'stock-low' : ''; ?>">
-                        Stock: <?php echo $row['Stok']; ?> items
+                    <h3><?php echo htmlspecialchars($row['nama']); ?></h3>
+                    <div class="price">Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?></div>
+                    <p class="description"><?php echo htmlspecialchars(substr($row['deskripsi'], 0, 80)); ?>...</p>
+                    <div class="stock-info <?php echo $row['Stok'] <= 5 ? ($row['Stok'] == 0 ? 'stock-out' : 'stock-low') : ''; ?>">
+                        <?php if ($row['Stok'] == 0): ?>
+                            Out of Stock
+                        <?php elseif ($row['Stok'] <= 5): ?>
+                            Only <?php echo $row['Stok']; ?> left in stock!
+                        <?php else: ?>
+                            Stock: <?php echo $row['Stok']; ?> items
+                        <?php endif; ?>
                     </div>
-                    <button class="btn btn-success add-to-cart"
+                    <button class="btn add-to-cart"
                         data-id="<?php echo $row['id']; ?>"
-                        data-nama="<?php echo $row['nama']; ?>"
+                        data-nama="<?php echo htmlspecialchars($row['nama']); ?>"
                         data-harga="<?php echo $row['harga']; ?>"
-                        data-gambar="<?php echo $row['gambar']; ?>"
-                        data-stok="<?php echo $row['Stok']; ?>">
-                        Tambah ke Keranjang
+                        data-gambar="<?php echo htmlspecialchars($row['gambar']); ?>"
+                        data-stok="<?php echo $row['Stok']; ?>"
+                        <?php echo $row['Stok'] == 0 ? 'disabled' : ''; ?>>
+                        <?php echo $row['Stok'] == 0 ? 'Out of Stock' : 'Tambah ke Keranjang'; ?>
                     </button>
                 </div>
             <?php } ?>
@@ -1704,6 +1733,11 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     return showLoginPopup();
                 }
                 
+                // Check if button is disabled (out of stock)
+                if ($(this).prop('disabled')) {
+                    return;
+                }
+                
                 const product = {
                     id: $(this).data("id"),
                     nama: $(this).data("nama"),
@@ -1741,15 +1775,31 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                                 // Update stock display
                                 const productCard = $(`.add-to-cart[data-id="${currentProduct.id}"]`).closest('.produk-card');
                                 const newStock = currentProduct.stok - quantity;
-                                productCard.find('.stock-info').text(`Stock: ${newStock} items`);
                                 
-                                if (newStock <= 5) {
-                                    productCard.find('.stock-info').addClass('stock-low');
-                                }
+                                // Update stock info
+                                let stockText = '';
+                                let stockClass = '';
                                 
-                                if (newStock <= 0) {
+                                if (newStock == 0) {
+                                    stockText = 'Out of Stock';
+                                    stockClass = 'stock-out';
                                     productCard.find('.add-to-cart').prop('disabled', true).text('Out of Stock');
+                                } else if (newStock <= 5) {
+                                    stockText = `Only ${newStock} left in stock!`;
+                                    stockClass = 'stock-low';
+                                } else {
+                                    stockText = `Stock: ${newStock} items`;
+                                    stockClass = '';
                                 }
+                                
+                                productCard.find('.stock-info')
+                                    .removeClass('stock-low stock-out')
+                                    .addClass(stockClass)
+                                    .text(stockText);
+                                
+                                // Update data attribute
+                                productCard.find('.add-to-cart').data('stok', newStock);
+                                
                             } else {
                                 showNotification(result.message || "Gagal menambahkan ke keranjang");
                             }

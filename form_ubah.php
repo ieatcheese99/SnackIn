@@ -3,10 +3,27 @@
 define('ADMIN_ACCESS', true);
 
 // Cek akses admin
-require_once 'config/security.php';
+require_once 'config/database.php';
+
+session_start();
+
+// Fungsi untuk memeriksa akses admin
+function requireAdmin() {
+    if (!isset($_SESSION['username']) || $_SESSION['level'] !== 'admin') {
+        header("Location: login.php");
+        exit();
+    }
+}
+
 requireAdmin();
 
-require "config/database.php";
+// Fungsi untuk sanitize input
+function sanitize_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
 
 // Ambil data barang berdasarkan ID
 if (isset($_GET['id'])) {
@@ -39,20 +56,30 @@ if (isset($_POST['submit'])) {
     if ($_FILES['gambar']['error'] == 0) {
         $gambar_name = $_FILES['gambar']['name'];
         $gambar_tmp = $_FILES['gambar']['tmp_name'];
-        $gambar_path = 'uploads/' . time() . '_' . $gambar_name;
-
-        if (move_uploaded_file($gambar_tmp, $gambar_path)) {
-            // Hapus gambar lama
-            if (!empty($barang['gambar']) && file_exists($barang['gambar'])) {
-                unlink($barang['gambar']);
-            }
-            
-            // Update data termasuk gambar
-            $query = "UPDATE barang SET nama=?, Deskripsi=?, Stok=?, Harga=?, gambar=?, kategori_id=? WHERE id=?";
-            $stmt = mysqli_prepare($db, $query);
-            mysqli_stmt_bind_param($stmt, "ssiisii", $Nama, $Deskripsi, $Stok, $Harga, $gambar_path, $KategoriID, $id);
+        $gambar_extension = strtolower(pathinfo($gambar_name, PATHINFO_EXTENSION));
+        
+        // Validasi ekstensi file
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (!in_array($gambar_extension, $allowed_extensions)) {
+            $error_message = "Format file tidak didukung! Gunakan JPG, JPEG, PNG, atau GIF.";
         } else {
-            $error_message = "Gagal mengupload gambar!";
+            // Generate unique filename
+            $gambar_filename = time() . '_' . uniqid() . '.' . $gambar_extension;
+            $gambar_path = 'uploads/' . $gambar_filename;
+
+            if (move_uploaded_file($gambar_tmp, $gambar_path)) {
+                // Hapus gambar lama
+                if (!empty($barang['gambar']) && file_exists($barang['gambar'])) {
+                    unlink($barang['gambar']);
+                }
+                
+                // Update data termasuk gambar
+                $query = "UPDATE barang SET nama=?, Deskripsi=?, Stok=?, Harga=?, gambar=?, kategori_id=? WHERE id=?";
+                $stmt = mysqli_prepare($db, $query);
+                mysqli_stmt_bind_param($stmt, "ssiisii", $Nama, $Deskripsi, $Stok, $Harga, $gambar_path, $KategoriID, $id);
+            } else {
+                $error_message = "Gagal mengupload gambar!";
+            }
         }
     } else {
         // Update tanpa mengubah gambar
@@ -63,7 +90,6 @@ if (isset($_POST['submit'])) {
 
     if (!isset($error_message) && mysqli_stmt_execute($stmt)) {
         $success_message = "Data berhasil diperbarui!";
-        logAdminAction("Update Product", "ID: $id, Name: $Nama");
         
         // Update local data
         $barang['nama'] = $Nama;
@@ -84,6 +110,13 @@ include 'include/admin_header.php';
 ?>
 
 <style>
+    :root {
+        --orange-primary: #ff9800;
+        --orange-secondary: #f57c00;
+        --orange-light: #ffb74d;
+        --orange-dark: #e65100;
+    }
+
     .form-container {
         background: white;
         border-radius: 20px;
@@ -99,7 +132,7 @@ include 'include/admin_header.php';
     }
 
     .form-header h1 {
-        color: #ff9800;
+        color: var(--orange-primary);
         font-weight: 700;
         margin-bottom: 10px;
         font-size: 28px;
@@ -130,7 +163,7 @@ include 'include/admin_header.php';
     }
 
     .form-control:focus, .form-select:focus {
-        border-color: #ff9800;
+        border-color: var(--orange-primary);
         box-shadow: 0 0 0 4px rgba(255,152,0,0.1);
         background: white;
     }
@@ -143,7 +176,7 @@ include 'include/admin_header.php';
     }
 
     .btn-primary {
-        background: #ff9800;
+        background: var(--orange-primary);
         border: none;
         padding: 15px 30px;
         border-radius: 12px;
@@ -154,7 +187,7 @@ include 'include/admin_header.php';
     }
 
     .btn-primary:hover {
-        background: #f57c00;
+        background: var(--orange-secondary);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(255,152,0,0.3);
     }
@@ -225,6 +258,48 @@ include 'include/admin_header.php';
         display: none;
     }
 
+    .page-header {
+        background: linear-gradient(135deg, var(--orange-primary) 0%, var(--orange-secondary) 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+
+    .nav-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .nav-btn {
+        background: white;
+        color: var(--orange-primary);
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid var(--orange-primary);
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+        background: var(--orange-primary);
+        color: white;
+    }
+
     @media (max-width: 768px) {
         .form-container {
             margin: 10px;
@@ -233,6 +308,10 @@ include 'include/admin_header.php';
         
         .form-header h1 {
             font-size: 24px;
+        }
+
+        .nav-buttons {
+            flex-direction: column;
         }
     }
 </style>
@@ -270,7 +349,13 @@ include 'include/admin_header.php';
 
     <div class="form-container">
         <div class="form-header">
-            <img src="<?php echo htmlspecialchars($barang['gambar']); ?>" alt="Current Image" class="current-image">
+            <?php if (!empty($barang['gambar']) && file_exists($barang['gambar'])): ?>
+                <img src="<?php echo htmlspecialchars($barang['gambar']); ?>" alt="Current Image" class="current-image">
+            <?php else: ?>
+                <div class="current-image" style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); display: flex; align-items: center; justify-content: center; color: #999;">
+                    <i class="fas fa-image" style="font-size: 48px;"></i>
+                </div>
+            <?php endif; ?>
             <h1><i class="fas fa-edit"></i> Edit Barang</h1>
             <p>Edit informasi produk: <strong><?php echo htmlspecialchars($barang['nama']); ?></strong></p>
         </div>
@@ -288,7 +373,7 @@ include 'include/admin_header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="editForm">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-4">
@@ -309,7 +394,7 @@ include 'include/admin_header.php';
                         <div class="input-group">
                             <i class="fas fa-money-bill input-icon"></i>
                             <input type="number" class="form-control with-icon" name="harga" id="harga" 
-                                   value="<?php echo $barang['Harga']; ?>" required>
+                                   value="<?php echo $barang['Harga']; ?>" min="1" required>
                         </div>
                     </div>
                     
@@ -320,7 +405,7 @@ include 'include/admin_header.php';
                         <div class="input-group">
                             <i class="fas fa-boxes input-icon"></i>
                             <input type="number" class="form-control with-icon" name="stok" id="stok" 
-                                   value="<?php echo $barang['Stok']; ?>" required>
+                                   value="<?php echo $barang['Stok']; ?>" min="0" required>
                         </div>
                     </div>
                 </div>
@@ -336,13 +421,17 @@ include 'include/admin_header.php';
                                 <option value="">Pilih Kategori</option>
                                 <?php
                                 $categories = mysqli_query($db, "SELECT * FROM kategori ORDER BY nama");
-                                while ($category = mysqli_fetch_assoc($categories)):
-                                    $selected = ($barang['kategori_id'] == $category['id']) ? 'selected' : '';
+                                if ($categories) {
+                                    while ($category = mysqli_fetch_assoc($categories)):
+                                        $selected = ($barang['kategori_id'] == $category['id']) ? 'selected' : '';
                                 ?>
                                     <option value="<?php echo $category['id']; ?>" <?php echo $selected; ?>>
                                         <?php echo htmlspecialchars($category['nama']); ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php 
+                                    endwhile; 
+                                }
+                                ?>
                             </select>
                         </div>
                     </div>
@@ -355,7 +444,7 @@ include 'include/admin_header.php';
                             <i class="fas fa-image input-icon"></i>
                             <input type="file" class="form-control with-icon" name="gambar" id="gambar" accept="image/*">
                         </div>
-                        <small class="text-muted">Kosongkan jika tidak ingin mengubah gambar</small>
+                        <small class="text-muted">Kosongkan jika tidak ingin mengubah gambar. Format: JPG, JPEG, PNG, GIF. Maksimal 5MB</small>
                         <img id="image-preview" alt="Preview">
                     </div>
                 </div>
@@ -388,6 +477,14 @@ include 'include/admin_header.php';
         const preview = document.getElementById('image-preview');
         
         if (file) {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar! Maksimal 5MB.');
+                this.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.src = e.target.result;
@@ -400,23 +497,35 @@ include 'include/admin_header.php';
     });
 
     // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
+    document.getElementById('editForm').addEventListener('submit', function(e) {
         const nama = document.getElementById('nama').value.trim();
         const harga = document.getElementById('harga').value;
         const stok = document.getElementById('stok').value;
         const kategori = document.getElementById('kategori_id').value;
+        const deskripsi = document.getElementById('deskripsi').value.trim();
         
-        if (!nama || !harga || !stok || !kategori) {
+        if (!nama || !harga || !stok || !kategori || !deskripsi) {
             e.preventDefault();
             alert('Semua field harus diisi!');
             return false;
         }
         
-        if (harga <= 0 || stok < 0) {
+        if (harga <= 0) {
             e.preventDefault();
-            alert('Harga harus lebih dari 0 dan stok tidak boleh negatif!');
+            alert('Harga harus lebih dari 0!');
             return false;
         }
+        
+        if (stok < 0) {
+            e.preventDefault();
+            alert('Stok tidak boleh negatif!');
+            return false;
+        }
+        
+        // Show loading
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+        submitBtn.disabled = true;
     });
 
     // Auto redirect after success
