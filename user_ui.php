@@ -5,10 +5,11 @@ require "config/database.php";
 session_start();
 $isLoggedIn = isset($_SESSION['username']) ? true : false;
 
-// Fetch all products with their category information
-$queryProduk = mysqli_query($db, "SELECT b.id, b.nama, b.harga, b.gambar, b.deskripsi, k.nama as kategori 
+// Fetch all products with their category information and stock
+$queryProduk = mysqli_query($db, "SELECT b.id, b.nama, b.Harga as harga, b.gambar, b.Deskripsi as deskripsi, b.Stok, k.nama as kategori 
                                  FROM barang b 
                                  JOIN kategori k ON b.kategori_id = k.id 
+                                 WHERE b.Stok > 0
                                  ORDER BY b.id DESC");
 
 // Fetch distinct categories for the filter
@@ -29,6 +30,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             --accent-color: #f48c06;
             --dark-blue: #00227c;
             --white: #ffffff;
+            --orange: #f69e22;
         }
 
         html {
@@ -105,397 +107,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             margin: 0 auto;
         }
 
-       
-        /* Main Header */
-        .main-header {
-            background-color: #00227c;
-            color: white;
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .main-header .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
-        }
-
-        .main-nav ul {
-            display: flex;
-            gap: 30px;
-        }
-
-        .main-nav a {
-            font-weight: 500;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-
-        .main-nav a:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .main-nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: white;
-            transition: width 0.3s ease;
-        }
-
-        .main-nav a:hover::after {
-            width: 100%;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .action-icon {
-            position: relative;
-            font-size: 18px;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .action-icon:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: white;
-            color: #00227c;
-            font-size: 10px;
-            font-weight: 600;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logout-icon {
-            color: #ff6b6b;
-        }
-
-        .mobile-menu-toggle {
-            display: none;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        
-    
-        /* Featured Banner */
-        .snack-section {
-            position: relative;
-            width: 100%;
-            background: linear-gradient(135deg, #f69e22 0%, #ff7e1a 100%);
-            color: white;
-            padding: 60px 20px;
-            overflow: hidden;
-        }
-        
-        .snack-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .snack-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .featured-logo {
-            max-width: 300px;
-            margin-bottom: 30px;
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .snack-tagline {
-            font-size: 36px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .snack-products {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin: 20px 0 50px;
-        }
-        
-        .product-item {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
-        }
-        
-        .product-item:hover {
-            transform: scale(1.05);
-        }
-        
-        .product-border {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 4px solid rgba(255,255,255,0.5);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-        }
-        
-        .product-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-        
-        .ambassador-section {
-            text-align: center;
-            margin: 40px 0;
-        }
-        
-        .ambassador-heading {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 30px;
-            position: relative;
-            display: inline-block;
-        }
-        
-        .ambassador-heading:after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background-color: white;
-        }
-        
-        .ambassador-grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 40px;
-            margin-top: 20px;
-        }
-        
-        .ambassador-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .ambassador-photo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            margin-bottom: 15px;
-        }
-        
-        .ambassador-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .ambassador-name {
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 10px;
-        }
-        
-        .cta-section {
-            margin-top: 40px;
-            text-align: center;
-        }
-        
-        .order-button {
-            display: inline-block;
-            padding: 15px 40px;
-            background-color:#00277c;
-            color: #f69e22;
-            font-size: 18px;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
-        }
-        
-        .order-button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            background-color: #fff8e1;
-        }
-        
-        .contact-info {
-            text-align: center;
-            margin-top: 30px;
-        }
-        
-        .contact-text {
-            margin: 5px 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        
-        .location-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .location-icon {
-            font-size: 18px;
-        }
-        
-        .decoration-circles {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            overflow: hidden;
-        }
-        
-        .decoration-circle {
-            position: absolute;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .circle1 {
-            width: 300px;
-            height: 300px;
-            top: -100px;
-            left: -100px;
-        }
-        
-        .circle2 {
-            width: 200px;
-            height: 200px;
-            bottom: -50px;
-            right: 10%;
-        }
-        
-        .circle3 {
-            width: 150px;
-            height: 150px;
-            top: 30%;
-            right: -50px;
-        }
-        
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .snack-tagline {
-                font-size: 28px;
-            }
-            
-            .snack-products {
-                gap: 20px;
-            }
-            
-            .product-item {
-                width: 120px;
-                height: 120px;
-            }
-            
-            .ambassador-grid {
-                gap: 20px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .snack-tagline {
-                font-size: 24px;
-            }
-            
-            .product-item {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .ambassador-photo {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .ambassador-name {
-                font-size: 16px;
-            }
-            
-            .order-button {
-                padding: 12px 30px;
-                font-size: 16px;
-            }
-        }
         /* Hero Section */
-        /* Enhanced Hero Section */
         .hero-section {
             position: relative;
             height: 600px;
@@ -668,322 +280,6 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             right: 20px;
         }
 
-        /* Responsive Hero Section */
-        @media screen and (max-width: 1200px) {
-            .hero-content h1 {
-                font-size: 3rem;
-            }
-            
-            .hero-content p {
-                font-size: 1.1rem;
-            }
-        }
-
-        @media screen and (max-width: 992px) {
-            .hero-section {
-                height: 500px;
-            }
-            
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero-content p {
-                font-size: 1rem;
-            }
-            
-            .hero-btn {
-                padding: 12px 24px;
-            }
-        }
-
-        @media screen and (max-width: 768px) {
-            .hero-section {
-                height: 450px;
-            }
-            
-            .hero-slide {
-                flex-direction: column;
-                justify-content: center;
-                text-align: center;
-                padding: 20px;
-            }
-            
-            .hero-content {
-                width: 100%;
-                padding: 0;
-                margin-bottom: 20px;
-            }
-            
-            .hero-content h1 {
-                font-size: 2rem;
-                margin-bottom: 15px;
-            }
-            
-            .hero-content p {
-                margin: 0 auto 20px;
-            }
-            
-            .hero-image {
-                position: relative;
-                width: 100%;
-                right: 0;
-                justify-content: center;
-                height: auto;
-                max-height: 200px;
-            }
-            
-            .hero-image img {
-                max-height: 180px;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .hero-section {
-                height: 400px;
-            }
-            
-            .hero-content h1 {
-                font-size: 1.8rem;
-            }
-            
-            .hero-content p {
-                font-size: 0.9rem;
-                margin-bottom: 15px;
-            }
-            
-            .hero-btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-            
-            .hero-image {
-                max-height: 150px;
-            }
-            
-            .hero-image img {
-                max-height: 140px;
-            }
-        }
-        /* Brand Ambassador Styles */
-        .ambassador-heading {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin: 40px 0 20px;
-            color: white;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-        }
-
-        .ambassador-circles {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin: 0 0 40px;
-        }
-
-        .ambassador-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: transform 0.3s ease;
-        }
-
-        .ambassador-item:hover {
-            transform: translateY(-5px);
-        }
-
-        .ambassador-circle {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border: 3px solid rgba(255,255,255,0.8);
-        }
-
-        .ambassador-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .ambassador-name {
-            margin-top: 10px;
-            font-weight: 600;
-            color: white;
-            font-size: 14px;
-            text-align: center;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-        @media screen and (max-width: 768px) {
-        
-        .ambassador-circle {
-            width: 100px;
-            height: 100px;
-        }
-        
-        .ambassador-circles {
-            gap: 20px;
-        }
-        
-        .ambassador-heading {
-            font-size: 22px;
-            margin: 30px 0 15px;
-        }
-    }
-    @media screen and (max-width: 480px) {
-        .ambassador-circle {
-            width: 80px;
-            height: 80px;
-        }
-        
-        .ambassador-circles {
-            gap: 15px;
-        }
-        
-        .ambassador-name {
-            font-size: 12px;
-        }
-        
-        .ambassador-heading {
-            font-size: 20px;
-            margin: 25px 0 15px;
-        }
-    }
-
-
-        /* Different text positioning classes */
-        .text-left {
-            align-self: flex-start;
-            text-align: left;
-            order: 2;
-        }
-
-        .text-right {
-            align-self: flex-end;
-            text-align: right;
-            order: 1;
-            margin-bottom: 1rem;
-        }
-
-        .text-center {
-            align-self: center;
-            text-align: center;
-            order: 1;
-        }
-
-        .text-bottom {
-            align-self: flex-end;
-            text-align: center;
-            order: 2;
-            margin-top: 1rem;
-        }
-
-        .text-bottom-left {
-            align-self: flex-start;
-            text-align: left;
-            order: 2;
-            margin-top: 1rem;
-        }
-
-        .text-top-right {
-            align-self: flex-end;
-            text-align: right;
-            order: 1;
-            margin-bottom: 1rem;
-        }
-
-        .slide-image-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .slide-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            line-height: 1.2;
-        }
-
-        .slide-description {
-            font-size: 1.25rem;
-            max-width: 100%;
-        }
-
-        .slide-image {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
-            border-radius: 12px;
-        }
-
-       /* Testimonials Section */
-       .testimonials {
-            padding: 80px 0;
-            background-color: #00227c;
-            color: white;
-        }
-
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-        }
-
-        .testimonial-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 30px 20px;
-            transition: all 0.3s ease;
-        }
-
-        .testimonial-item:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .testimonial-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 4px solid #f69e22;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .testimonial-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .testimonial-stars {
-            color: #f69e22;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .testimonial-text {
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-
-        .testimonial-name {
-            font-weight: 600;
-            font-size: 18px;
-        }
-
         /* Product List Section */
         .daftar-produk {
             margin-top: 50px;
@@ -1088,263 +384,245 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             font-weight: 500;
         }
 
-        /* Footer */
-        .footer {
-            background-color: #222;
-            color: white;
-            padding-top: 60px;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-column h3 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #444;
-        }
-
-        .footer-column ul li {
-            margin-bottom: 10px;
-        }
-
-        .footer-column a {
-            transition: color 0.3s ease;
-        }
-
-        .footer-column a:hover {
-            color: #f69e22;
-        }
-
-        .footer-contact li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .footer-contact i {
-            color: #888;
+        .stock-info {
+            color: #666;
+            font-size: 12px;
             margin-top: 5px;
         }
 
-        .footer-newsletter p {
-            margin-bottom: 20px;
-            color: #ccc;
+        .stock-low {
+            color: #ff6b6b;
+            font-weight: bold;
         }
 
-        .newsletter-form {
-            display: flex;
-            gap: 10px;
-        }
-
-        .newsletter-form input {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background-color: #333;
-            color: white;
-            border-radius: 5px;
-        }
-
-        .footer-social {
-            margin-top: 20px;
-        }
-
-        .footer-social h4 {
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .social-icons a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background-color: #333;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .social-icons a:hover {
-            background-color: #f69e22;
-            transform: translateY(-3px);
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #444;
-            padding: 20px 0;
-            text-align: center;
-        }
-
-        .footer-bottom p {
-            color: #888;
-            font-size: 14px;
-        }
-
-        .footer-bottom a {
-            color: #f69e22;
-        }
-
-        /* Mobile Menu */
-        .mobile-menu {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 300px;
-            height: 100%;
-            background-color: white;
-            z-index: 2000;
-            padding: 20px;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-            transition: right 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .mobile-menu.active {
-            right: 0;
-        }
-
-        .mobile-menu-close {
-            text-align: right;
-            margin-bottom: 20px;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .mobile-menu ul li {
-            margin-bottom: 15px;
-        }
-
-        .mobile-menu ul li a {
-            display: block;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .mobile-menu-overlay {
+        /* Cart Popup Styles */
+        .cart-popup {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1999;
-            display: none;
-        }
-
-        .mobile-menu-overlay.active {
-            display: block;
-        }
-
-        /* Notification */
-        #cart-notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
             background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            backdrop-filter: blur(5px);
+        }
+
+        .cart-popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: popupSlideIn 0.3s ease-out;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .cart-popup-header {
+            background: linear-gradient(135deg, #00227c, #0a3baf);
             color: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
-            min-width: 300px;
-            max-width: 80%;
-            text-align: center;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-popup-header h3 {
+            margin: 0;
             font-size: 18px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        /* Responsive Styles */
-        @media (max-width: 992px) {
-            .main-nav {
-                display: none;
-            }
-
-            .mobile-menu-toggle {
-                display: block;
-            }
-            .banner-slider {
-                height: 500px;
-            }
-
-            .slide-title {
-                font-size: 28px;
-            }
-
-            .slide-description {
-                font-size: 16px;
-            }
-
-            .slide-image {
-                max-width: 200px;
-            }
-
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .testimonials-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .produk-card {
-                width: calc(50% - 16px);
-            }
+        .cart-popup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
         }
 
-
-        @media (max-width: 768px) {
-            
-
-            .testimonials-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .produk-card {
-                width: calc(50% - 16px);
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .newsletter-form {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .newsletter-form .btn {
-                width: 100%;
-            }
+        .cart-popup-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
         }
-    
-        @media (max-width: 576px) {
-         
 
-            .produk-card {
-                width: 100%;
-                max-width: 300px;
-            }
+        .cart-popup-body {
+            padding: 25px;
+        }
+
+        .product-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #f0f0f0;
+        }
+
+        .product-details h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00227c;
+            margin-bottom: 8px;
+        }
+
+        .product-stock {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .quantity-section {
+            margin-bottom: 25px;
+        }
+
+        .quantity-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #00227c;
+            background: white;
+            color: #00227c;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:hover:not(:disabled) {
+            background: #00227c;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-input {
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .cart-popup-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: #bbb;
+            color: #333;
+        }
+
+        .btn-primary {
+            flex: 2;
+            padding: 12px;
+            background: linear-gradient(135deg, #00227c, #0a3baf);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 34, 124, 0.3);
         }
 
         /* Login Popup Styles */
@@ -1472,6 +750,401 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         .login-popup-overlay.active {
             opacity: 1;
         }
+
+        /* Success Popup Styles */
+        .success-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            backdrop-filter: blur(5px);
+        }
+
+        .success-popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: successSlideIn 0.5s ease-out;
+        }
+
+        @keyframes successSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: checkmarkPulse 0.6s ease-out;
+        }
+
+        @keyframes checkmarkPulse {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-checkmark i {
+            color: white;
+            font-size: 36px;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00227c;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 80px 0;
+            background-color: #00227c;
+            color: white;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .testimonial-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .testimonial-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 4px solid #f69e22;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .testimonial-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .testimonial-stars {
+            color: #f69e22;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .testimonial-text {
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #222;
+            color: white;
+            padding-top: 60px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column a {
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: #f69e22;
+        }
+
+        .footer-contact li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .footer-contact i {
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .footer-social {
+            margin-top: 20px;
+        }
+
+        .footer-social h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            background-color: #f69e22;
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #444;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .footer-bottom a {
+            color: #f69e22;
+        }
+
+        /* Notification */
+        #cart-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            min-width: 300px;
+            max-width: 80%;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .hero-section {
+                height: 500px;
+            }
+
+            .hero-content h1 {
+                font-size: 3rem;
+            }
+
+            .hero-content p {
+                font-size: 1.1rem;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .produk-card {
+                width: calc(50% - 16px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                height: 450px;
+            }
+
+            .hero-slide {
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .hero-content {
+                width: 100%;
+                padding: 0;
+                margin-bottom: 20px;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+                margin-bottom: 15px;
+            }
+
+            .hero-content p {
+                margin: 0 auto 20px;
+            }
+
+            .hero-image {
+                position: relative;
+                width: 100%;
+                right: 0;
+                justify-content: center;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .hero-image img {
+                max-height: 180px;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .produk-card {
+                width: calc(50% - 16px);
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .cart-popup-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .cart-popup-body {
+                padding: 20px;
+            }
+
+            .product-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cart-popup-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .produk-card {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .hero-content h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero-content p {
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+            }
+
+            .hero-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .hero-image {
+                max-height: 150px;
+            }
+
+            .hero-image img {
+                max-height: 140px;
+            }
+        }
     </style>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1480,6 +1153,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 </head>
 
 <body>
+    <!-- Include User Header -->
+    <?php include 'include/user_header.php'; ?>
+
     <!-- Login Popup -->
     <?php if (!$isLoggedIn): ?>
     <div class="attractive-login-popup" id="login-popup">
@@ -1498,65 +1174,72 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
     </div>
     <div class="login-popup-overlay" id="login-popup-overlay"></div>
     <?php endif; ?>
-    
-    <!-- Main Header -->
-    <header class="main-header">
-        <div class="container">
-            <a href="user_ui.php" class="logo">
-                <img src="assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
-                <span>SNACK IN</span>
-            </a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="user_ui.php">Home</a></li>
-                    <li><a href="about.php">About</a></li>
-                    <li><a href="#produk">Shop</a></li>
-                    <li><a href="#testimonials">Testimoni</a></li>
-                    <li><a href="#footer">Contact</a></li>
-                </ul>
-            </nav>
-            <div class="header-actions">
-                <div class="action-icon">
-                    <a href="include/cart.php">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="badge cart-count">0</span>
-                    </a>
+
+    <!-- Cart Popup -->
+    <div class="cart-popup" id="cart-popup">
+        <div class="cart-popup-content">
+            <div class="cart-popup-header">
+                <h3><i class="fas fa-shopping-cart"></i> Add to Cart</h3>
+                <button class="cart-popup-close" id="cart-popup-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cart-popup-body">
+                <div class="product-info">
+                    <img src="/placeholder.svg?height=80&width=80" alt="" class="product-image" id="popup-product-image">
+                    <div class="product-details">
+                        <h4 id="popup-product-name"></h4>
+                        <div class="product-price" id="popup-product-price"></div>
+                        <div class="product-stock" id="popup-product-stock"></div>
+                    </div>
                 </div>
-                <div class="action-icon">
-                    <a href="history.php">
-                        <i class="fas fa-history"></i>
-                    </a>
+                
+                <div class="quantity-section">
+                    <label>Quantity:</label>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" id="quantity-minus">-</button>
+                        <input type="number" class="quantity-input" id="quantity-input" value="1" min="1">
+                        <button class="quantity-btn" id="quantity-plus">+</button>
+                    </div>
                 </div>
-                <?php if($isLoggedIn): ?>
-                <a href="logout.php" class="action-icon logout-icon">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-                <?php else: ?>
-                <a href="login.php" class="action-icon">
-                    <i class="fas fa-user"></i>
-                </a>
-                <?php endif; ?>
-                <div class="mobile-menu-toggle" id="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
+
+                <div class="total-section">
+                    <div class="total-row">
+                        <span>Price per item:</span>
+                        <span id="price-per-item"></span>
+                    </div>
+                    <div class="total-row">
+                        <span>Quantity:</span>
+                        <span id="total-quantity">1</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total:</span>
+                        <span id="total-price"></span>
+                    </div>
+                </div>
+
+                <div class="cart-popup-actions">
+                    <button class="btn-secondary" id="continue-shopping">Continue Shopping</button>
+                    <button class="btn-primary" id="add-to-cart-confirm">Add to Cart</button>
                 </div>
             </div>
         </div>
-    </header>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobile-menu">
-        <div class="mobile-menu-close" id="mobile-menu-close">
-            <i class="fas fa-times"></i>
-        </div>
-        <ul>
-            <li><a href="user_ui.php">Home</a></li>
-            <li><a href="about.php">About</a></li>
-            <li><a href="#produk">Shop</a></li>
-            <li><a href="#testimonials">Testimoni</a></li>
-            <li><a href="#footer">Contact</a></li>
-        </ul>
     </div>
-    <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+
+    <!-- Success Popup -->
+    <div class="success-popup" id="success-popup">
+        <div class="success-popup-content">
+            <div class="success-checkmark">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="success-title">Order Successful!</h2>
+            <p class="success-message">Your order has been placed successfully. You will receive a confirmation shortly.</p>
+            <div class="success-actions">
+                <button class="btn-secondary" onclick="hideSuccessPopup()">Continue Shopping</button>
+                <a href="history.php" class="btn-primary">View Orders</a>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Slider Section -->
     <section class="hero-section">
@@ -1572,20 +1255,20 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         </a>
                     </div>
                     <div class="hero-image">
-                        <img src="assets/img/pngtree-creamy-oreo-milkshake-png-image_13066217.png" alt="Hero Image 1">
+                        <img src="/placeholder.svg?height=400&width=400" alt="Hero Image 1">
                     </div>
                 </div>
                 <div class="hero-slide" style="background: linear-gradient(135deg, #00227c 0%, #0a3baf 100%);">
                     <div class="hero-content">
                         <h1>CEMILAN ASLI INDONESIA</h1>
                         <p>Diolah dengan resep tradisional yang dipadukan dengan teknologi modern. Rasakan kelezatan asli Indonesia dalam setiap gigitannya.</p>
-                        <a href="#tentang" class="hero-btn">
+                        <a href="#produk" class="hero-btn">
                             <span>Tentang Kami</span>
                             <i class="arrow-icon">→</i>
                         </a>
                     </div>
                     <div class="hero-image">
-                        <img src="assets\img\basreng-bakso-goreng-snack-sliced-600nw-2443716985.webp" alt="Hero Image 2">
+                        <img src="/placeholder.svg?height=400&width=400" alt="Hero Image 2">
                     </div>
                 </div>
                 <div class="hero-slide" style="background: linear-gradient(135deg, #00227c 0%, #0a3baf 100%);">
@@ -1598,7 +1281,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         </a>
                     </div>
                     <div class="hero-image">
-                        <img src="images\downloadsingkong.jpg" alt="Hero Image 3">
+                        <img src="/placeholder.svg?height=400&width=400" alt="Hero Image 3">
                     </div>
                 </div>
             </div>
@@ -1618,7 +1301,10 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         <!-- Category Filter Buttons -->
         <div class="category-filter">
             <button class="category-btn active" data-category="all">Semua</button>
-            <?php while ($kategori = mysqli_fetch_assoc($queryKategori)) { ?>
+            <?php 
+            mysqli_data_seek($queryKategori, 0); // Reset pointer
+            while ($kategori = mysqli_fetch_assoc($queryKategori)) { ?>
+                <button class="category-btn" data-category="<?php  { ?>
                 <button class="category-btn" data-category="<?php echo $kategori['nama']; ?>"><?php echo $kategori['nama']; ?></button>
             <?php } ?>
         </div>
@@ -1634,11 +1320,15 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     <h3><?php echo $row['nama']; ?></h3>
                     <p style="color: green;">Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?></p>
                     <p><?php echo substr($row['deskripsi'], 0, 50); ?>...</p>
+                    <div class="stock-info <?php echo $row['Stok'] <= 5 ? 'stock-low' : ''; ?>">
+                        Stock: <?php echo $row['Stok']; ?> items
+                    </div>
                     <button class="btn btn-success add-to-cart"
                         data-id="<?php echo $row['id']; ?>"
                         data-nama="<?php echo $row['nama']; ?>"
                         data-harga="<?php echo $row['harga']; ?>"
-                        data-gambar="<?php echo $row['gambar']; ?>">
+                        data-gambar="<?php echo $row['gambar']; ?>"
+                        data-stok="<?php echo $row['Stok']; ?>">
                         Tambah ke Keranjang
                     </button>
                 </div>
@@ -1657,7 +1347,8 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <!-- Testimonial 1 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="4.png" alt="4.png">
+                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 1" style="display: none;">
+                        <span>Customer 1</span>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1673,7 +1364,8 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <!-- Testimonial 2 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="3.png" alt="3.png">
+                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 2" style="display: none;">
+                        <span>Customer 2</span>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1682,14 +1374,15 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
                     </div>
-                    <p class="testimonial-text">"Saya selalu membeli Kue soes  dari Snack In setiap kali berkunjung. Rasanya sangat Enak dan harganya terjangkau!"</p>
+                    <p class="testimonial-text">"Saya selalu membeli Capuccino dari Snack In setiap kali berkunjung. Rasanya sangat Enak dan harganya terjangkau!"</p>
                     <h3 class="testimonial-name">Naila Aribah</h3>
                 </div>
 
                 <!-- Testimonial 3 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="2.png" alt="2.png">
+                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 3" style="display: none;">
+                        <span>Customer 3</span>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1726,6 +1419,15 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                             <a href="mailto:mz.siradj@gmail.com">mz.siradj@gmail.com</a>
                         </li>
                     </ul>
+                    <div class="footer-social">
+                        <h4>Follow Us</h4>
+                        <div class="social-icons">
+                            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Products -->
@@ -1741,28 +1443,12 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <div class="footer-column">
                     <h3>Further Info</h3>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="about.html">Testimoni</a></li>
-                        <li><a href="shop.html">Shop</a></li>
-                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="user_ui.php">Home</a></li>
+                        <li><a href="about.php">About</a></li>
+                        <li><a href="#produk">Shop</a></li>
+                        <li><a href="#testimonials">Testimoni</a></li>
+                        <li><a href="#footer">Contact</a></li>
                     </ul>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="footer-column footer-newsletter">
-                    <h3>Newsletter</h3>
-                    <p>Subscribe to our newsletter to get the latest updates and offers.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email address">
-                        <button type="submit" class="btn">Subscribe</button>
-                    </div>
-                    <div class="footer-social">
-                        <h4>Follow Us</h4>
-                        <div class="social-icons">
-                            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
-                            <a href="tel:+6281211734491" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1804,13 +1490,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             
             // Initialize slider
             function initSlider() {
-                // Set initial position
                 updateSlider();
-                
-                // Start auto-sliding
                 startAutoSlide();
                 
-                // Add event listeners for navigation
                 prevBtn.addEventListener('click', () => {
                     goToSlide(currentSlide - 1);
                     resetInterval();
@@ -1820,37 +1502,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     goToSlide(currentSlide + 1);
                     resetInterval();
                 });
-                
-                // Add touch events for mobile
-                let startX, endX;
-                const slider = document.getElementById('hero-slider');
-                
-                slider.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                }, { passive: true });
-                
-                slider.addEventListener('touchend', (e) => {
-                    endX = e.changedTouches[0].clientX;
-                    handleSwipe();
-                }, { passive: true });
-                
-                function handleSwipe() {
-                    const threshold = 50; // Minimum distance for swipe
-                    if (startX - endX > threshold) {
-                        // Swipe left
-                        goToSlide(currentSlide + 1);
-                        resetInterval();
-                    } else if (endX - startX > threshold) {
-                        // Swipe right
-                        goToSlide(currentSlide - 1);
-                        resetInterval();
-                    }
-                }
             }
             
-            // Go to specific slide
             function goToSlide(index) {
-                // Handle wrapping
                 if (index < 0) {
                     index = slideCount - 1;
                 } else if (index >= slideCount) {
@@ -1861,12 +1515,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 updateSlider();
             }
             
-            // Update slider position and active dot
             function updateSlider() {
-                // Update slides position
                 slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
                 
-                // Update navigation dots
                 const dots = document.querySelectorAll('.slider-dot');
                 dots.forEach((dot, index) => {
                     if (index === currentSlide) {
@@ -1877,30 +1528,29 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 });
             }
             
-            // Start auto-sliding
             function startAutoSlide() {
                 slideInterval = setInterval(() => {
                     goToSlide(currentSlide + 1);
-                }, 5000); // Change slide every 5 seconds
+                }, 5000);
             }
             
-            // Reset interval for auto-sliding
             function resetInterval() {
                 clearInterval(slideInterval);
                 startAutoSlide();
             }
             
-            // Initialize the slider
             initSlider();
             
             // Check if user is logged in
             const isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
             
+            // Cart popup variables
+            let currentProduct = {};
+            
             // Category Filter Functionality
             $(".category-btn").click(function() {
                 const selectedCategory = $(this).data("category");
 
-                // Toggle active class
                 if ($(this).hasClass("active") && selectedCategory !== "all") {
                     $(this).removeClass("active");
                     $(".category-btn[data-category='all']").addClass("active");
@@ -1912,7 +1562,6 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 }
             });
 
-            // Filter products based on category
             function filterProducts(category) {
                 if (category === "all") {
                     $(".produk-card").show();
@@ -1922,7 +1571,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 }
             }
             
-            // Function to show attractive login popup
+            // Login popup functions
             function showLoginPopup() {
                 $('#login-popup').addClass('active').fadeIn(100);
                 $('#login-popup-overlay').addClass('active').fadeIn(100);
@@ -1930,21 +1579,107 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 return false;
             }
             
-            // Function to hide login popup
             function hideLoginPopup() {
                 $('#login-popup').removeClass('active').fadeOut(200);
                 $('#login-popup-overlay').removeClass('active').fadeOut(200);
                 $('body').css('overflow', '');
             }
             
-            // Close login popup when clicking close button or overlay
             $('.login-popup-close, #login-popup-overlay').click(function() {
                 hideLoginPopup();
             });
             
-            // Prevent propagation when clicking on popup content to avoid closing
             $('.login-popup-content').click(function(e) {
                 e.stopPropagation();
+            });
+            
+            // Cart popup functions
+            function showCartPopup(product) {
+                currentProduct = product;
+                
+                $('#popup-product-image').attr('src', product.gambar);
+                $('#popup-product-name').text(product.nama);
+                $('#popup-product-price').text('Rp ' + formatNumber(product.harga));
+                $('#popup-product-stock').text('Stock: ' + product.stok + ' items');
+                $('#price-per-item').text('Rp ' + formatNumber(product.harga));
+                
+                // Reset quantity
+                $('#quantity-input').val(1);
+                updateTotal();
+                
+                // Set max quantity based on stock
+                $('#quantity-input').attr('max', product.stok);
+                
+                $('#cart-popup').fadeIn(300);
+                $('body').css('overflow', 'hidden');
+            }
+            
+            function hideCartPopup() {
+                $('#cart-popup').fadeOut(200);
+                $('body').css('overflow', '');
+            }
+            
+            function updateTotal() {
+                const quantity = parseInt($('#quantity-input').val()) || 1;
+                const price = currentProduct.harga;
+                const total = quantity * price;
+                
+                $('#total-quantity').text(quantity);
+                $('#total-price').text('Rp ' + formatNumber(total));
+                
+                // Update button states
+                $('#quantity-minus').prop('disabled', quantity <= 1);
+                $('#quantity-plus').prop('disabled', quantity >= currentProduct.stok);
+            }
+            
+            function formatNumber(number) {
+                return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+            
+            // Success popup functions
+            function showSuccessPopup() {
+                $('#success-popup').fadeIn(300);
+                $('body').css('overflow', 'hidden');
+            }
+            
+            window.hideSuccessPopup = function() {
+                $('#success-popup').fadeOut(200);
+                $('body').css('overflow', '');
+            }
+            
+            // Cart popup event listeners
+            $('#cart-popup-close, #continue-shopping').click(function() {
+                hideCartPopup();
+            });
+            
+            $('#cart-popup').click(function(e) {
+                if (e.target === this) {
+                    hideCartPopup();
+                }
+            });
+            
+            $('#quantity-minus').click(function() {
+                const current = parseInt($('#quantity-input').val());
+                if (current > 1) {
+                    $('#quantity-input').val(current - 1);
+                    updateTotal();
+                }
+            });
+            
+            $('#quantity-plus').click(function() {
+                const current = parseInt($('#quantity-input').val());
+                if (current < currentProduct.stok) {
+                    $('#quantity-input').val(current + 1);
+                    updateTotal();
+                }
+            });
+            
+            $('#quantity-input').on('input change', function() {
+                let value = parseInt($(this).val()) || 1;
+                if (value < 1) value = 1;
+                if (value > currentProduct.stok) value = currentProduct.stok;
+                $(this).val(value);
+                updateTotal();
             });
             
             // Handle cart icon click
@@ -1955,7 +1690,6 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 }
             });
 
-            // Handle history link click
             $('.action-icon a[href="history.php"]').click(function(e) {
                 if (!isLoggedIn) {
                     e.preventDefault();
@@ -1963,42 +1697,67 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 }
             });
 
-            // Add to cart functionality using AJAX
+            // Add to cart functionality
             $(".add-to-cart").click(function(e) {
-                // If not logged in, show login popup instead
                 if (!isLoggedIn) {
                     e.preventDefault();
                     return showLoginPopup();
                 }
                 
-                var id = $(this).data("id");
-                var nama = $(this).data("nama");
-                var harga = $(this).data("harga");
-                var gambar = $(this).data("gambar");
-
+                const product = {
+                    id: $(this).data("id"),
+                    nama: $(this).data("nama"),
+                    harga: $(this).data("harga"),
+                    gambar: $(this).data("gambar"),
+                    stok: $(this).data("stok")
+                };
+                
+                showCartPopup(product);
+            });
+            
+            // Confirm add to cart
+            $('#add-to-cart-confirm').click(function() {
+                const quantity = parseInt($('#quantity-input').val());
+                
                 $.ajax({
-                    url: "include/cart_action.php", // Correct path to the cart action file
+                    url: "include/cart_action.php",
                     type: "POST",
                     data: {
                         action: "add",
-                        id: id,
-                        nama: nama,
-                        harga: harga,
-                        gambar: gambar
+                        id: currentProduct.id,
+                        nama: currentProduct.nama,
+                        harga: currentProduct.harga,
+                        gambar: currentProduct.gambar,
+                        quantity: quantity
                     },
                     success: function(response) {
                         try {
                             var result = JSON.parse(response);
                             if(result.success) {
                                 updateCartCount();
-                                showNotification(`${nama} telah ditambahkan ke keranjang!`);
+                                hideCartPopup();
+                                showNotification(`${quantity}x ${currentProduct.nama} telah ditambahkan ke keranjang!`);
+                                
+                                // Update stock display
+                                const productCard = $(`.add-to-cart[data-id="${currentProduct.id}"]`).closest('.produk-card');
+                                const newStock = currentProduct.stok - quantity;
+                                productCard.find('.stock-info').text(`Stock: ${newStock} items`);
+                                
+                                if (newStock <= 5) {
+                                    productCard.find('.stock-info').addClass('stock-low');
+                                }
+                                
+                                if (newStock <= 0) {
+                                    productCard.find('.add-to-cart').prop('disabled', true).text('Out of Stock');
+                                }
                             } else {
-                                showNotification("Gagal menambahkan ke keranjang");
+                                showNotification(result.message || "Gagal menambahkan ke keranjang");
                             }
                         } catch(e) {
                             console.error("Error parsing response:", response);
                             updateCartCount();
-                            showNotification(`${nama} telah ditambahkan ke keranjang!`);
+                            hideCartPopup();
+                            showNotification(`${quantity}x ${currentProduct.nama} telah ditambahkan ke keranjang!`);
                         }
                     },
                     error: function(xhr, status, error) {
@@ -2011,7 +1770,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             // Update cart count
             function updateCartCount() {
                 $.ajax({
-                    url: "include/cart_action.php", // Correct path to the cart action file
+                    url: "include/cart_action.php",
                     type: "POST",
                     data: {
                         action: "count"
@@ -2027,7 +1786,6 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
             // Show notification
             function showNotification(message) {
-                // Create notification element if it doesn't exist
                 if (!document.getElementById('cart-notification')) {
                     const notification = document.createElement('div');
                     notification.id = 'cart-notification';
@@ -2048,44 +1806,6 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     notification.style.opacity = '0';
                     notification.style.transform = 'translateX(-50%) translateY(-20px)';
                 }, 3000);
-            }
-
-            // Mobile menu functionality
-            const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
-            const mobileMenu = document.getElementById("mobile-menu");
-            const mobileMenuClose = document.getElementById("mobile-menu-close");
-            const mobileMenuOverlay = document.getElementById("mobile-menu-overlay");
-
-            // Toggle mobile menu
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener("click", () => {
-                    if (mobileMenu) {
-                        mobileMenu.style.right = "0";
-                        if (mobileMenuOverlay) {
-                            mobileMenuOverlay.style.display = "block";
-                        }
-                        document.body.style.overflow = "hidden"; // Prevent scrolling
-                    }
-                });
-            }
-
-            // Close mobile menu
-            function closeMobileMenu() {
-                if (mobileMenu) {
-                    mobileMenu.style.right = "-300px";
-                    if (mobileMenuOverlay) {
-                        mobileMenuOverlay.style.display = "none";
-                    }
-                    document.body.style.overflow = ""; // Enable scrolling
-                }
-            }
-
-            if (mobileMenuClose) {
-                mobileMenuClose.addEventListener("click", closeMobileMenu);
-            }
-            
-            if (mobileMenuOverlay) {
-                mobileMenuOverlay.addEventListener("click", closeMobileMenu);
             }
         });
     </script>

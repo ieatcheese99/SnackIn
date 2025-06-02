@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // Prepare SQL statement to prevent SQL injection
-    $sql = "SELECT * FROM users WHERE username = ?";
+    $sql = "SELECT * FROM user WHERE username = ?";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "s", $username);
     mysqli_stmt_execute($stmt);
@@ -47,6 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['loggedin'] = true;
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['level'] = $user['level'];
 
             // Remember me functionality
             if (isset($_POST['remember']) && $_POST['remember'] == 'on') {
@@ -56,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $token = bin2hex(random_bytes(16));
                 
                 // Update token in database
-                $update_sql = "UPDATE users SET remember_token = ? WHERE id = ?";
+                $update_sql = "UPDATE user SET remember_token = ? WHERE id = ?";
                 $update_stmt = mysqli_prepare($db, $update_sql);
                 mysqli_stmt_bind_param($update_stmt, "si", $token, $user['id']);
                 mysqli_stmt_execute($update_stmt);
@@ -67,7 +68,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             echo json_encode([
                 'success' => true,
-                'message' => 'Login successful'
+                'message' => 'Login successful',
+                'redirect' => $user['level'] == 'admin' ? 'admin/dashboard.php' : 'user_ui.php'
             ]);
         } else {
             // Password is incorrect

@@ -1,801 +1,542 @@
 <?php
-// Pastikan session dimulai
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// Define admin access constant
+define('ADMIN_ACCESS', true);
 
-// Koneksi ke database
-$db = new mysqli("localhost", "root", "", "data_produk2");
-if ($db->connect_error) {
-    die("Koneksi gagal: " . $db->connect_error);
-}
+// Cek akses admin
+require_once 'config/security.php';
+requireAdmin();
 
-// Pagination
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$per_page = 10;
-$offset = ($page - 1) * $per_page;
-
-// Get total orders count
-$count_query = "SELECT COUNT(*) as total FROM orders";
-$count_result = $db->query($count_query);
-$total_orders = $count_result->fetch_assoc()['total'];
-$total_pages = ceil($total_orders / $per_page);
-
-// Get orders with pagination
-$query = "SELECT * FROM orders ORDER BY created_at DESC LIMIT $offset, $per_page";
-$result = $db->query($query);
-
-// Handle order deletion
-if (isset($_POST['delete_order']) && isset($_POST['order_id'])) {
-    $order_id = (int)$_POST['order_id'];
-    $delete_query = "DELETE FROM orders WHERE id = $order_id";
-    if ($db->query($delete_query)) {
-        // Redirect to refresh the page
-        header("Location: pesanan.php");
-        exit;
-    }
-}
+require "config/database.php";
 
 // Handle viewing order details
 $view_order = null;
 $order_items = null;
 if (isset($_GET['view']) && $_GET['view'] > 0) {
     $view_id = (int)$_GET['view'];
-    $view_query = "SELECT * FROM orders WHERE id = $view_id";
-    $view_result = $db->query($view_query);
+    $view_query = "SELECT o.* FROM orders o WHERE o.id = ?";
+    $stmt = mysqli_prepare($db, $view_query);
+    mysqli_stmt_bind_param($stmt, 'i', $view_id);
+    mysqli_stmt_execute($stmt);
+    $view_result = mysqli_stmt_get_result($stmt);
 
-    if ($view_result->num_rows > 0) {
-        $view_order = $view_result->fetch_assoc();
+    if ($view_result && mysqli_num_rows($view_result) > 0) {
+        $view_order = mysqli_fetch_assoc($view_result);
 
         // Get order items
-        $items_query = "SELECT * FROM order_items WHERE order_id = $view_id";
-        $order_items = $db->query($items_query);
+        $items_query = "SELECT * FROM order_items WHERE order_id = ?";
+        $items_stmt = mysqli_prepare($db, $items_query);
+        mysqli_stmt_bind_param($items_stmt, 'i', $view_id);
+        mysqli_stmt_execute($items_stmt);
+        $order_items = mysqli_stmt_get_result($items_stmt);
     }
 }
 
-// Function to get payment method badge
-function getPaymentBadge($method)
-{
-    switch ($method) {
-        case 'transfer_bank':
-            return '<span class="badge bg-blue">Transfer Bank</span>';
-        case 'cod':
-            return '<span class="badge bg-amber">COD</span>';
-        case 'e-wallet':
-            return '<span class="badge bg-teal">E-Wallet</span>';
-        default:
-            return '<span class="badge bg-gray">' . htmlspecialchars($method) . '</span>';
+// Handle status update
+if (isset($_POST['update_status']) && isset($_POST['order_id'])) {
+    $order_id = (int)$_POST['order_id'];
+    $new_status = $_POST['status'];
+    
+    // Validate status
+    $allowed_statuses = ['pending', 'processing', 'completed', 'cancelled'];
+    if (in_array($new_status, $allowed_statuses)) {
+        $update_query = "UPDATE orders SET status = ? WHERE id = ?";
+        $stmt = mysqli_prepare($db, $update_query);
+        mysqli_stmt_bind_param($stmt, 'si', $new_status, $order_id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success_message = "Status pesanan berhasil diupdate!";
+            
+            // Refresh the view_order data if we're viewing this order
+            if ($view_order && $view_order['id'] == $order_id) {
+                $view_order['status'] = $new_status;
+            }
+        } else {
+            $error_message = "Gagal mengupdate status pesanan!";
+        }
+    } else {
+        $error_message = "Status tidak valid!";
     }
 }
 
-// Function to format date
-function formatDate($date)
-{
-    return date('d M Y, H:i', strtotime($date));
+// Get all orders with order items (if not viewing specific order)
+if (!$view_order) {
+    $orders_query = "SELECT o.* FROM orders o ORDER BY o.created_at DESC";
+    $orders_result = mysqli_query($db, $orders_query);
 }
+
+$page_title = "Manajemen Pesanan";
+include 'include/admin_header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
+<style>
+    .orders-stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $view_order ? "Detail Pesanan #" . $view_order['id'] : "Daftar Pesanan"; ?></title>
+    .stat-item {
+        text-align: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #00227c;
+    }
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    .stat-number {
+        font-size: 24px;
+        font-weight: 800;
+        color: #00227c;
+        display: block;
+    }
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    .detail-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
 
-    <style>
-        /* Base Styles */
-        :root {
-            --primary: #4361ee;
-            --primary-light: #eef2ff;
-            --secondary: #3f3d56;
-            --success: #10b981;
-            --success-light: #ecfdf5;
-            --warning: #f59e0b;
-            --warning-light: #fffbeb;
-            --danger: #ef4444;
-            --danger-light: #fef2f2;
-            --info: #06b6d4;
-            --info-light: #ecfeff;
-            --gray: #6b7280;
-            --gray-light: #f9fafb;
-            --border: #e5e7eb;
-            --text-dark: #1f2937;
-            --text-muted: #6b7280;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    .detail-header {
+        background: #00227c;
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .detail-body {
+        padding: 30px;
+    }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #00227c;
+    }
+
+    .info-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .info-table th {
+        text-align: left;
+        padding: 8px 0;
+        font-weight: 600;
+        color: #555;
+        width: 40%;
+    }
+
+    .info-table td {
+        padding: 8px 0;
+        color: #333;
+    }
+
+    .status-update-form {
+        background: #fff3cd;
+        border-radius: 8px;
+        padding: 20px;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .items-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .items-table td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .total-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        text-align: right;
+    }
+
+    .total-amount {
+        font-size: 24px;
+        font-weight: 700;
+        color: #00227c;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .bg-primary { background-color: #007bff; color: white; }
+    .bg-success { background-color: #28a745; color: white; }
+    .bg-warning { background-color: #ffc107; color: black; }
+    .bg-danger { background-color: #dc3545; color: white; }
+    .bg-info { background-color: #17a2b8; color: white; }
+
+    @media (max-width: 768px) {
+        .orders-stats {
+            flex-direction: column;
+            gap: 15px;
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            background-color: #f8fafc;
-        }
-
-        /* Card Styles */
-        .card-modern {
-            background: white;
-            border-radius: 12px;
-            border: none;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .card-modern:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .card-header-modern {
-            background: var(--primary);
-            color: white;
-            padding: 16px 20px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: none;
-        }
-
-        .card-header-modern i {
-            margin-right: 10px;
-        }
-
-        .card-body-modern {
-            padding: 24px;
-        }
-
-        /* Info Box Styles */
-        .info-box {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-        }
-
-        .info-box-primary {
-            border-left: 4px solid var(--primary);
-        }
-
-        .info-box-success {
-            border-left: 4px solid var(--success);
-        }
-
-        /* Section Title */
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--secondary);
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title i {
-            margin-right: 8px;
-            color: var(--primary);
-        }
-
-        /* Table Styles */
-        .table-modern {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .table-modern th {
-            background-color: var(--gray-light);
-            font-weight: 600;
-            color: var(--secondary);
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .table-modern td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        .table-modern tbody tr:hover {
-            background-color: var(--primary-light);
-        }
-
-        .table-modern tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Badge Styles */
-        .badge {
-            padding: 6px 10px;
-            font-weight: 500;
-            border-radius: 6px;
-            font-size: 0.75rem;
-        }
-
-        .badge.bg-blue {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .badge.bg-amber {
-            background-color: var(--warning);
-            color: #7c2d12;
-        }
-
-        .badge.bg-teal {
-            background-color: var(--info);
-            color: white;
-        }
-
-        .badge.bg-gray {
-            background-color: var(--gray);
-            color: white;
-        }
-
-        /* Button Styles */
-        .btn-modern {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-modern-primary {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        .btn-modern-primary:hover {
-            background-color: #3b4fd8;
-            color: white;
-        }
-
-        .btn-modern-secondary {
-            background-color: white;
-            color: var(--secondary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-modern-secondary:hover {
-            background-color: var(--gray-light);
-            color: var(--secondary);
-        }
-
-        .btn-modern-danger {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-        }
-
-        .btn-modern-danger:hover {
-            background-color: #dc2626;
-            color: white;
-        }
-
-        .btn-modern-sm {
-            padding: 6px 12px;
-            font-size: 0.875rem;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        /* Summary Box */
-        .summary-box {
-            background-color: var(--gray-light);
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 24px;
-        }
-
-        .summary-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .summary-table th {
-            padding: 10px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-
-        .summary-table td {
-            padding: 10px;
-            text-align: right;
-        }
-
-        .summary-table .total-row {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--primary);
-        }
-
-        /* Pagination */
-        .pagination-modern {
-            display: flex;
-            justify-content: center;
-            margin-top: 24px;
-            gap: 8px;
-        }
-
-        .pagination-modern .page-item {
-            list-style: none;
-        }
-
-        .pagination-modern .page-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background-color: white;
-            color: var(--secondary);
-            border: 1px solid var(--border);
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .pagination-modern .page-link:hover {
-            background-color: var(--primary-light);
-            color: var(--primary);
-        }
-
-        .pagination-modern .page-item.active .page-link {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .pagination-modern .page-item.disabled .page-link {
-            color: var(--gray);
-            pointer-events: none;
-            background-color: var(--gray-light);
-        }
-
-        /* Empty State */
-        .empty-state {
+        
+        .detail-header {
+            flex-direction: column;
+            gap: 15px;
             text-align: center;
-            padding: 48px 24px;
         }
+    }
+</style>
 
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--gray);
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <i class="fas fa-clipboard-list"></i> 
+            <?php echo $view_order ? "Detail Pesanan #" . $view_order['id'] : "Manajemen Pesanan"; ?>
+        </h1>
+        <p class="page-subtitle">
+            <?php echo $view_order ? "Detail lengkap dan update status pesanan" : "Kelola dan pantau semua pesanan pelanggan"; ?>
+        </p>
+    </div>
+</div>
 
-        .empty-state h4 {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--secondary);
-        }
-
-        .empty-state p {
-            color: var(--text-muted);
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        /* Modal Styles */
-        .modal-modern .modal-content {
-            border-radius: 12px;
-            border: none;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
-
-        .modal-modern .modal-header {
-            background-color: white;
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-        }
-
-        .modal-modern .modal-body {
-            padding: 24px;
-        }
-
-        .modal-modern .modal-footer {
-            background-color: var(--gray-light);
-            border-top: 1px solid var(--border);
-            padding: 16px 24px;
-        }
-
-        /* Print Styles */
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-
-            body {
-                background-color: white;
-            }
-
-            .card-modern {
-                box-shadow: none;
-                margin: 0;
-                border: none;
-            }
-
-            .card-header-modern {
-                color: black;
-                background: white;
-                border-bottom: 2px solid #eee;
-            }
-
-            .info-box {
-                box-shadow: none;
-                border: 1px solid #eee;
-            }
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .card-body-modern {
-                padding: 16px;
-            }
-
-            .table-modern th,
-            .table-modern td {
-                padding: 10px;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container py-4">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-            <h2 class="mb-0 fw-bold"><?php echo $view_order ? "Detail Pesanan #" . $view_order['id'] : "Daftar Pesanan"; ?></h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item active"><?php echo $view_order ? "Detail Pesanan" : "Pesanan"; ?></li>
-                </ol>
-            </nav>
-        </div>
-
-        <?php if ($view_order): ?>
-            <!-- Detail Pesanan View -->
-            <div class="card-modern">
-                <div class="card-header-modern">
-                    <div>
-                        <i class="fas fa-info-circle"></i>
-                        Detail Pesanan #<?php echo $view_order['id']; ?>
-                    </div>
-                    <a href="pesanan.php" class="btn-modern btn-modern-secondary btn-modern-sm no-print">
-                        <i class="fas fa-arrow-left"></i>
-                        Kembali
-                    </a>
-                </div>
-                <div class="card-body-modern">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-box info-box-primary">
-                                <h5 class="section-title">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    Informasi Pesanan
-                                </h5>
-                                <table class="table-modern">
-                                    <tbody>
-                                        <tr>
-                                            <th width="40%">ID Pesanan</th>
-                                            <td><strong>#<?php echo $view_order['id']; ?></strong></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Tanggal Pesanan</th>
-                                            <td><?php echo formatDate($view_order['created_at']); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Metode Pembayaran</th>
-                                            <td><?php echo getPaymentBadge($view_order['metode_pembayaran']); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total</th>
-                                            <td><span style="color: var(--primary); font-weight: 700;">Rp <?php echo number_format($view_order['total_harga'], 0, ',', '.'); ?></span></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Status</th>
-                                            <td>
-                                                <form method="POST" action="">
-                                                    <input type="hidden" name="order_id" value="<?php echo $view_order['id']; ?>">
-                                                    <div class="input-group">
-                                                        <select name="status" id="status" class="form-select">
-                                                            <option value="processing" <?php echo ($view_order['status'] ?? 'processing') == 'processing' ? 'selected' : ''; ?>>Sedang Diproses</option>
-                                                            <option value="delivered" <?php echo ($view_order['status'] ?? '') == 'delivered' ? 'selected' : ''; ?>>Selesai</option>
-                                                        </select>
-                                                        <button type="submit" name="update_status" class="btn-modern btn-modern-primary btn-modern-sm">
-                                                            <i class="fas fa-save"></i>
-                                                            Simpan
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-box info-box-success">
-                                <h5 class="section-title">
-                                    <i class="fas fa-user"></i>
-                                    Informasi Pelanggan
-                                </h5>
-                                <table class="table-modern">
-                                    <tbody>
-                                        <tr>
-                                            <th width="40%">Nama</th>
-                                            <td><strong><?php echo htmlspecialchars($view_order['nama']); ?></strong></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Alamat</th>
-                                            <td><?php echo nl2br(htmlspecialchars($view_order['alamat'])); ?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h5 class="section-title mt-4">
-                        <i class="fas fa-box"></i>
-                        Item Pesanan
-                    </h5>
-                    <div class="table-responsive">
-                        <table class="table-modern">
-                            <thead>
-                                <tr>
-                                    <th>ID Produk</th>
-                                    <th>Nama Produk</th>
-                                    <th>Harga</th>
-                                    <th>Jumlah</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if ($order_items && $order_items->num_rows > 0): ?>
-                                    <?php while ($item = $order_items->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?php echo $item['produk_id']; ?></td>
-                                            <td><strong><?php echo htmlspecialchars($item['nama_produk']); ?></strong></td>
-                                            <td>Rp <?php echo number_format($item['harga'], 0, ',', '.'); ?></td>
-                                            <td><?php echo $item['jumlah']; ?></td>
-                                            <td><strong>Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></strong></td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="5" class="text-center">Tidak ada item</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="summary-box">
-                        <div class="row">
-                            <div class="col-md-8"></div>
-                            <div class="col-md-4">
-                                <table class="summary-table">
-                                    <tr class="total-row">
-                                        <th>Total Pesanan</th>
-                                        <td>Rp <?php echo number_format($view_order['total_harga'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between mt-4 no-print">
-                        <a href="pesanan.php" class="btn-modern btn-modern-secondary">
-                            <i class="fas fa-arrow-left"></i>
-                            Kembali
-                        </a>
-                        <div>
-                            <button type="button" class="btn-modern btn-modern-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $view_order['id']; ?>">
-                                <i class="fas fa-trash"></i>
-                                Hapus Pesanan
-                            </button>
-                            <button type="button" class="btn-modern btn-modern-primary ms-2" onclick="window.print()">
-                                <i class="fas fa-print"></i>
-                                Cetak Pesanan
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Delete Modal -->
-                    <div class="modal fade modal-modern" id="deleteModal<?php echo $view_order['id']; ?>" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title fw-bold">Konfirmasi Hapus</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body text-center">
-                                    <div class="mb-4">
-                                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--warning);"></i>
-                                    </div>
-                                    <h5 class="mb-2">Apakah Anda yakin?</h5>
-                                    <p class="mb-0">Pesanan <strong>#<?php echo $view_order['id']; ?></strong> akan dihapus secara permanen.</p>
-                                    <p class="text-muted small mt-2">Tindakan ini tidak dapat dibatalkan</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Batal</button>
-                                    <form method="POST" action="pesanan.php">
-                                        <input type="hidden" name="order_id" value="<?php echo $view_order['id']; ?>">
-                                        <button type="submit" name="delete_order" class="btn-modern btn-modern-danger">Hapus</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php else: ?>
-            <!-- Daftar Pesanan View -->
-            <div class="card-modern">
-                <div class="card-header-modern">
-                    <div>
-                        <i class="fas fa-shopping-cart"></i>
-                        Daftar Pesanan
-                    </div>
-                    <div>
-                        <span class="badge bg-blue"><?php echo $total_orders; ?> pesanan</span>
-                    </div>
-                </div>
-                <div class="card-body-modern p-0">
-                    <?php if ($result->num_rows > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table-modern">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nama</th>
-                                        <th>Alamat</th>
-                                        <th>Metode Pembayaran</th>
-                                        <th>Total</th>
-                                        <th>Tanggal</th>
-                                        <th class="text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php while ($order = $result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><strong>#<?php echo $order['id']; ?></strong></td>
-                                            <td><?php echo htmlspecialchars($order['nama']); ?></td>
-                                            <td><?php echo htmlspecialchars(substr($order['alamat'], 0, 30)) . (strlen($order['alamat']) > 30 ? '...' : ''); ?></td>
-                                            <td><?php echo getPaymentBadge($order['metode_pembayaran']); ?></td>
-                                            <td><span style="color: var(--primary); font-weight: 600;">Rp <?php echo number_format($order['total_harga'], 0, ',', '.'); ?></span></td>
-                                            <td><?php echo formatDate($order['created_at']); ?></td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn-modern btn-modern-primary btn-modern-sm">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <button type="button" class="btn-modern btn-modern-danger btn-modern-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $order['id']; ?>">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-
-                                                <!-- Delete Modal -->
-                                                <div class="modal fade modal-modern" id="deleteModal<?php echo $order['id']; ?>" tabindex="-1" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title fw-bold">Konfirmasi Hapus</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body text-center">
-                                                                <div class="mb-4">
-                                                                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--warning);"></i>
-                                                                </div>
-                                                                <h5 class="mb-2">Apakah Anda yakin?</h5>
-                                                                <p class="mb-0">Pesanan <strong>#<?php echo $order['id']; ?></strong> akan dihapus secara permanen.</p>
-                                                                <p class="text-muted small mt-2">Tindakan ini tidak dapat dibatalkan</p>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Batal</button>
-                                                                <form method="POST" action="">
-                                                                    <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                                                    <button type="submit" name="delete_order" class="btn-modern btn-modern-danger">Hapus</button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <?php if ($total_pages > 1): ?>
-                            <div class="p-3">
-                                <ul class="pagination-modern">
-                                    <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="?page=<?php echo $page - 1; ?>">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </a>
-                                    </li>
-
-                                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                        <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>">
-                                            <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                                        </li>
-                                    <?php endfor; ?>
-
-                                    <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="?page=<?php echo $page + 1; ?>">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        <?php endif; ?>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-cart"></i>
-                            <h4>Belum Ada Pesanan</h4>
-                            <p>Belum ada pesanan yang masuk ke sistem.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php endif; ?>
+<div class="container-fluid">
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <a href="index.php" class="nav-btn">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="data_barang.php" class="nav-btn">
+            <i class="fas fa-box"></i> Data Barang
+        </a>
+        <a href="kategori.php" class="nav-btn">
+            <i class="fas fa-tags"></i> Kategori
+        </a>
+        <a href="pesanan.php" class="nav-btn active">
+            <i class="fas fa-shopping-cart"></i> Pesanan
+        </a>
+        <a href="user.php" class="nav-btn">
+            <i class="fas fa-users"></i> User
+        </a>
+        <a href="history_admin.php" class="nav-btn">
+            <i class="fas fa-history"></i> History
+        </a>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php if (isset($success_message)): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
+        </div>
+    <?php endif; ?>
 
-    <!-- Optional: DataTables for enhanced table functionality -->
-    <script>
-        $(document).ready(function() {
-            // Add any JavaScript functionality here
+    <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> <?php echo $error_message; ?>
+        </div>
+    <?php endif; ?>
 
-            // Example: Add confirmation for delete buttons
-            $('.btn-modern-danger').click(function() {
-                return confirm('Apakah Anda yakin ingin menghapus pesanan ini?');
-            });
-        });
-    </script>
-</body>
+    <?php if ($view_order): ?>
+        <!-- Detail View -->
+        <div class="detail-container">
+            <div class="detail-header">
+                <h3><i class="fas fa-info-circle"></i> Detail Pesanan #<?php echo $view_order['id']; ?></h3>
+                <a href="pesanan.php" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+            <div class="detail-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-section">
+                            <div class="info-title">
+                                <i class="fas fa-shopping-cart"></i> Informasi Pesanan
+                            </div>
+                            <table class="info-table">
+                                <tr>
+                                    <th>ID Pesanan</th>
+                                    <td><strong>#<?php echo $view_order['id']; ?></strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <td><?php echo date('d M Y, H:i', strtotime($view_order['created_at'])); ?></td>
+                                </tr>
+                                <tr>
+                                    <th>Metode Pembayaran</th>
+                                    <td>
+                                        <?php
+                                        $method = $view_order['metode_pembayaran'];
+                                        $badge_class = 'bg-primary';
+                                        if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false) $badge_class = 'bg-warning';
+                                        if (strpos(strtolower($method), 'transfer') !== false) $badge_class = 'bg-info';
+                                        if (strpos(strtolower($method), 'qris') !== false) $badge_class = 'bg-success';
+                                        ?>
+                                        <span class="badge <?php echo $badge_class; ?>">
+                                            <?php echo htmlspecialchars($method); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        <?php
+                                        $status = $view_order['status'] ?? 'pending';
+                                        $status_class = 'bg-info';
+                                        if ($status == 'completed') $status_class = 'bg-success';
+                                        if ($status == 'cancelled') $status_class = 'bg-danger';
+                                        if ($status == 'processing') $status_class = 'bg-warning';
+                                        ?>
+                                        <span class="badge <?php echo $status_class; ?>">
+                                            <?php echo ucfirst($status); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total</th>
+                                    <td><strong style="color: #00227c;">Rp <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-section">
+                            <div class="info-title">
+                                <i class="fas fa-user"></i> Informasi Pelanggan
+                            </div>
+                            <table class="info-table">
+                                <tr>
+                                    <th>Nama</th>
+                                    <td><strong><?php echo htmlspecialchars($view_order['nama']); ?></strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td><?php echo htmlspecialchars($view_order['username'] ?? 'N/A'); ?></td>
+                                </tr>
+                                <tr>
+                                    <th>Alamat</th>
+                                    <td><?php echo nl2br(htmlspecialchars($view_order['alamat'])); ?></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="status-update-form">
+                            <div class="info-title">
+                                <i class="fas fa-cog"></i> Update Status
+                            </div>
+                            <form method="POST">
+                                <input type="hidden" name="order_id" value="<?php echo $view_order['id']; ?>">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status Pesanan</label>
+                                    <select name="status" id="status" class="form-select">
+                                        <option value="pending" <?php echo ($view_order['status'] ?? 'pending') == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="processing" <?php echo ($view_order['status'] ?? '') == 'processing' ? 'selected' : ''; ?>>Processing</option>
+                                        <option value="completed" <?php echo ($view_order['status'] ?? '') == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                        <option value="cancelled" <?php echo ($view_order['status'] ?? '') == 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                                    </select>
+                                </div>
+                                <button type="submit" name="update_status" class="btn btn-primary w-100">
+                                    <i class="fas fa-save"></i> Update Status
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
-</html>
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="fas fa-box"></i> Item Pesanan
+                    </div>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>ID Produk</th>
+                                <th>Nama Produk</th>
+                                <th>Harga</th>
+                                <th>Jumlah</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($order_items && mysqli_num_rows($order_items) > 0): ?>
+                                <?php while ($item = mysqli_fetch_assoc($order_items)): ?>
+                                    <tr>
+                                        <td><?php echo $item['produk_id']; ?></td>
+                                        <td><strong><?php echo htmlspecialchars($item['nama_produk']); ?></strong></td>
+                                        <td>Rp <?php echo number_format($item['harga'], 0, ',', '.'); ?></td>
+                                        <td><?php echo $item['jumlah']; ?></td>
+                                        <td><strong>Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></strong></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">Tidak ada item</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="total-section">
+                    <div>Subtotal: Rp <?php echo number_format($view_order['total_harga'], 0, ',', '.'); ?></div>
+                    <div>Biaya Admin: Rp <?php echo number_format($view_order['biaya_admin'] ?? 0, 0, ',', '.'); ?></div>
+                    <div class="total-amount">
+                        Total Pesanan: Rp <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="pesanan.php" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </a>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Cetak
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+        <!-- List View -->
+        <div class="content-container">
+            <div class="orders-stats">
+                <?php
+                $total_orders = mysqli_num_rows($orders_result);
+                $pending_orders = mysqli_num_rows(mysqli_query($db, "SELECT * FROM orders WHERE status = 'pending' OR status IS NULL"));
+                $processing_orders = mysqli_num_rows(mysqli_query($db, "SELECT * FROM orders WHERE status = 'processing'"));
+                $completed_orders = mysqli_num_rows(mysqli_query($db, "SELECT * FROM orders WHERE status = 'completed'"));
+                $cancelled_orders = mysqli_num_rows(mysqli_query($db, "SELECT * FROM orders WHERE status = 'cancelled'"));
+                ?>
+                <div class="stat-item">
+                    <span class="stat-number"><?php echo $total_orders; ?></span>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number"><?php echo $pending_orders; ?></span>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number"><?php echo $processing_orders; ?></span>
+                    <div class="stat-label">Processing</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number"><?php echo $completed_orders; ?></span>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number"><?php echo $cancelled_orders; ?></span>
+                    <div class="stat-label">Cancelled</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="enhanced-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pelanggan</th>
+                            <th>Alamat</th>
+                            <th>Metode Pembayaran</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if (mysqli_num_rows($orders_result) > 0): 
+                        ?>
+                            <?php while ($order = mysqli_fetch_assoc($orders_result)): ?>
+                            <tr>
+                                <td><strong>#<?php echo $order['id']; ?></strong></td>
+                                <td>
+                                    <?php echo htmlspecialchars($order['nama']); ?><br>
+                                    <small class="text-muted"><?php echo htmlspecialchars($order['username'] ?? 'N/A'); ?></small>
+                                </td>
+                                <td><?php echo htmlspecialchars(substr($order['alamat'], 0, 30)) . (strlen($order['alamat']) > 30 ? '...' : ''); ?></td>
+                                <td>
+                                    <?php
+                                    $method = $order['metode_pembayaran'];
+                                    $badge_class = 'bg-primary';
+                                    if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false) $badge_class = 'bg-warning';
+                                    if (strpos(strtolower($method), 'transfer') !== false) $badge_class = 'bg-info';
+                                    if (strpos(strtolower($method), 'qris') !== false) $badge_class = 'bg-success';
+                                    ?>
+                                    <span class="badge <?php echo $badge_class; ?>">
+                                        <?php echo htmlspecialchars($method); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php
+                                    $status = $order['status'] ?? 'pending';
+                                    $status_class = 'bg-info';
+                                    if ($status == 'completed') $status_class = 'bg-success';
+                                    if ($status == 'cancelled') $status_class = 'bg-danger';
+                                    if ($status == 'processing') $status_class = 'bg-warning';
+                                    ?>
+                                    <span class="badge <?php echo $status_class; ?>">
+                                        <?php echo ucfirst($status); ?>
+                                    </span>
+                                </td>
+                                <td><strong style="color: #00227c;">Rp <?php echo number_format($order['total_harga'] + ($order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong></td>
+                                <td><?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?></td>
+                                <td>
+                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="text-center" style="padding: 60px;">
+                                    <i class="fas fa-inbox" style="font-size: 64px; color: #ccc; margin-bottom: 20px; display: block;"></i>
+                                    <h5 style="color: #666; margin: 0;">Belum ada pesanan</h5>
+                                    <p style="color: #999; margin: 5px 0 0 0;">Pesanan akan muncul di sini setelah pelanggan melakukan pembelian</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
+</div>
+
+<?php include 'include/admin_footer.php'; ?>

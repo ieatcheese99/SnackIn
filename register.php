@@ -2,8 +2,8 @@
 session_start();
 require "config/database.php";
 
+// Redirect jika sudah login
 if (isset($_SESSION['username'])) {
-    // Redirect jika sudah login
     if ($_SESSION['level'] == "admin") {
         header("Location: index.php");
     } else {
@@ -12,52 +12,64 @@ if (isset($_SESSION['username'])) {
     exit();
 }
 
-// Cek jika ada cookie remember me
-if (isset($_COOKIE['username']) && isset($_COOKIE['password'])) {
-    $username = $_COOKIE['username'];
-    $password = $_COOKIE['password'];
-
-    $query = mysqli_query($db, "SELECT * FROM user WHERE username='$username'");
-    $data = mysqli_fetch_assoc($query);
-
-    if ($data && password_verify($password, $data['password'])) {
-        $_SESSION['username'] = $data['username'];
-        $_SESSION['level'] = $data['level'];
-
-        if ($data['level'] == "admin") {
-            header("Location: index.php");
-        } else {
-            header("Location: user_ui.php");
-        }
-        exit();
-    }
+// Fungsi untuk membersihkan input
+function sanitize_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    return $data;
 }
 
+// Proses registrasi
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
+    $username = sanitize_input($_POST['username']);
     $password = $_POST['password'];
-    $remember = isset($_POST['remember']);
-
-    $query = mysqli_query($db, "SELECT * FROM user WHERE username='$username'");
-    $data = mysqli_fetch_assoc($query);
-
-    if ($data && password_verify($password, $data['password'])) {
-        $_SESSION['username'] = $data['username'];
-        $_SESSION['level'] = $data['level'];
-
-        if ($remember) {
-            setcookie("username", $username, time() + (86400 * 30), "/");
-            setcookie("password", $password, time() + (86400 * 30), "/");
+    $confirm_password = $_POST['confirm_password'];
+    
+    $errors = [];
+    
+    // Validasi input
+    if (empty($username)) {
+        $errors[] = "Username harus diisi!";
+    } elseif (strlen($username) < 3) {
+        $errors[] = "Username minimal 3 karakter!";
+    } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        $errors[] = "Username hanya boleh mengandung huruf, angka, dan underscore!";
+    }
+    
+    if (empty($password)) {
+        $errors[] = "Password harus diisi!";
+    } elseif (strlen($password) < 6) {
+        $errors[] = "Password minimal 6 karakter!";
+    }
+    
+    if ($password !== $confirm_password) {
+        $errors[] = "Konfirmasi password tidak cocok!";
+    }
+    
+    // Cek apakah username sudah ada
+    if (empty($errors)) {
+        $check_username = mysqli_query($db, "SELECT username FROM user WHERE username='$username'");
+        if (mysqli_num_rows($check_username) > 0) {
+            $errors[] = "Username sudah digunakan! Silakan pilih username lain.";
         }
-
-        if ($data['level'] == "admin") {
-            header("Location: index.php");
+    }
+    
+    // Jika tidak ada error, simpan ke database
+    if (empty($errors)) {
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        
+        $query = "INSERT INTO user (username, password, level) VALUES (?, ?, 'user')";
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, 'ss', $username, $hashed_password);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success_message = "Registrasi berhasil! Silakan login dengan akun Anda.";
+            // Auto redirect setelah 3 detik
+            header("refresh:3;url=login.php");
         } else {
-            header("Location: user_ui.php");
+            $errors[] = "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
         }
-        exit();
-    } else {
-        $error = "Username atau password salah!";
     }
 }
 ?>
@@ -67,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Snack In</title>
+    <title>Daftar - Snack In</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -112,18 +124,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .particle:nth-child(7) { width: 9px; height: 9px; left: 70%; animation-delay: 0.5s; }
         .particle:nth-child(8) { width: 11px; height: 11px; left: 80%; animation-delay: 1.5s; }
         .particle:nth-child(9) { width: 7px; height: 7px; left: 90%; animation-delay: 2.5s; }
-
-        /* Background decoration */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="80" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-        }
 
         .container {
             min-height: 100vh;
@@ -171,10 +171,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             filter: brightness(1.2) contrast(1.1);
         }
 
-        .welcome-content {
-            text-align: center;
-        }
-
         .welcome-content h1 {
             font-size: 2.5rem;
             font-weight: 700;
@@ -192,7 +188,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             animation: slideInLeft 1s ease-out 0.2s both;
         }
 
-        /* Snack Illustration dengan Image */
+        .features-list {
+            margin-top: 2rem;
+            text-align: left;
+            animation: slideInLeft 1s ease-out 0.4s both;
+        }
+
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            animation: slideInLeft 0.6s ease-out calc(0.6s + var(--delay)) both;
+        }
+
+        .features-list li:nth-child(1) { --delay: 0.1s; }
+        .features-list li:nth-child(2) { --delay: 0.2s; }
+        .features-list li:nth-child(3) { --delay: 0.3s; }
+        .features-list li:nth-child(4) { --delay: 0.4s; }
+
+        .features-list li i {
+            color: #f69e22;
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
         .snack-illustration {
             position: absolute;
             bottom: 3rem;
@@ -215,7 +242,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
         }
 
-        /* Fallback untuk ilustrasi jika gambar tidak ada */
         .snack-fallback {
             width: 120px;
             height: 120px;
@@ -227,7 +253,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 3rem;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.2);
-            animation: pulse 2s ease-in-out infinite;
         }
 
         .right-side {
@@ -239,9 +264,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             position: relative;
+            overflow-y: auto;
         }
 
-        .login-form {
+        .register-form {
             width: 100%;
             max-width: 420px;
             background: white;
@@ -250,21 +276,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             animation: slideInRight 1s ease-out;
+            margin: 2rem 0;
         }
 
         .form-header {
             text-align: center;
             margin-bottom: 2rem;
-        }
-
-        .form-header .logo-section {
-            margin-bottom: 1.5rem;
-            animation: bounceIn 1s ease-out 0.3s both;
-        }
-
-        .form-header .logo-section img {
-            height: 60px;
-            margin-bottom: 10px;
         }
 
         .form-header h2 {
@@ -276,22 +293,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            animation: fadeInDown 1s ease-out 0.4s both;
+            animation: fadeInDown 1s ease-out 0.3s both;
         }
 
         .form-header p {
             color: #64748b;
             font-size: 0.95rem;
-            animation: fadeInDown 1s ease-out 0.5s both;
+            animation: fadeInDown 1s ease-out 0.4s both;
         }
 
         .form-group {
             margin-bottom: 1.5rem;
-            animation: fadeInUp 0.6s ease-out calc(0.6s + var(--delay)) both;
+            animation: fadeInUp 0.6s ease-out calc(0.5s + var(--delay)) both;
         }
 
         .form-group:nth-child(1) { --delay: 0.1s; }
         .form-group:nth-child(2) { --delay: 0.2s; }
+        .form-group:nth-child(3) { --delay: 0.3s; }
 
         .form-group label {
             display: block;
@@ -319,44 +337,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transform: translateY(-2px);
         }
 
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease-out 0.9s both;
-        }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-check input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #f69e22;
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
             transition: all 0.3s ease;
         }
 
-        .form-check input[type="checkbox"]:hover {
-            transform: scale(1.1);
-        }
+        .strength-weak { color: #dc2626; }
+        .strength-medium { color: #f59e0b; }
+        .strength-strong { color: #10b981; }
 
-        .form-check label {
-            font-size: 0.875rem;
-            color: #64748b;
-            margin: 0;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .form-check label:hover {
-            color: #f69e22;
-        }
-
-        .btn-login {
+        .btn-register {
             width: 100%;
             padding: 0.875rem;
             background: linear-gradient(45deg, #00227c, #1e40af);
@@ -373,39 +364,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            animation: fadeInUp 1s ease-out 1s both;
+            animation: fadeInUp 1s ease-out 0.8s both;
         }
 
-        .btn-login:hover {
+        .btn-register:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(0, 34, 124, 0.4);
         }
 
-        .btn-login:active {
+        .btn-register:active {
             transform: translateY(-1px);
         }
 
-        .register-link {
+        .login-link {
             text-align: center;
             font-size: 0.875rem;
             color: #64748b;
-            animation: fadeInUp 1s ease-out 1.1s both;
+            animation: fadeInUp 1s ease-out 0.9s both;
         }
 
-        .register-link a {
+        .login-link a {
             color: #00227c;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
         }
 
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
             color: #f69e22;
-        }
-
-        .register-link p {
-            margin-bottom: 0.5rem;
         }
 
         .alert {
@@ -414,9 +401,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 1.5rem;
             font-size: 0.875rem;
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            align-items: flex-start;
+            gap: 1rem;
             animation: slideInDown 0.5s ease-out;
+        }
+
+        .alert-success {
+            background: linear-gradient(45deg, #f0fdf4, #dcfce7);
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
 
         .alert-danger {
@@ -425,10 +418,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border: 1px solid #fecaca;
         }
 
-        .alert-warning {
-            background: linear-gradient(45deg, #fffbeb, #fef3c7);
-            color: #d97706;
-            border: 1px solid #fed7aa;
+        .alert ul {
+            margin: 0;
+            padding-left: 1rem;
+        }
+
+        .alert li {
+            margin-bottom: 0.25rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-control.with-icon {
+            padding-left: 2.5rem;
+        }
+
+        .form-control:focus + .input-icon {
+            color: #f69e22;
+        }
+
+        .input-group {
+            position: relative;
         }
 
         @media (max-width: 1024px) {
@@ -444,7 +462,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 background: linear-gradient(135deg, #00227c 0%, #1e40af 50%, #f69e22 100%);
             }
             
-            .login-form {
+            .register-form {
                 background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(10px);
             }
@@ -455,7 +473,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 padding: 1rem;
             }
             
-            .login-form {
+            .register-form {
                 padding: 2rem 1.5rem;
                 max-width: 100%;
             }
@@ -463,37 +481,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             .welcome-content h1 {
                 font-size: 2rem;
             }
-            
-            .snack-illustration {
-                width: 100px;
-                height: 100px;
-                bottom: 2rem;
-            }
-        }
-
-        /* Loading animation */
-        .btn-login.loading {
-            position: relative;
-            color: transparent;
-        }
-
-        .btn-login.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         /* Animations */
@@ -580,31 +567,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             50% { transform: scale(1.1); }
         }
 
-        /* Hide fallback when image loads successfully */
-        .snack-image:not([src=""]) ~ .snack-fallback {
-            display: none;
+        .btn-register.loading {
+            position: relative;
+            color: transparent;
         }
 
-        /* Input focus effects */
-        .form-control:focus {
-            animation: inputFocus 0.3s ease-out;
+        .btn-register.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        @keyframes inputFocus {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* Button click effect */
-        .btn-login:active {
-            animation: buttonClick 0.2s ease-out;
+        /* Success animation */
+        .success-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #10b981;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            animation: successPop 0.6s ease-out;
+            flex-shrink: 0;
         }
 
-        @keyframes buttonClick {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.98); }
-            100% { transform: scale(1); }
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -630,72 +644,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <img src="images\AHLINYA CEMILAN.png" alt="Snack In Logo" class="logo-image">
                 </div>
                 <div class="welcome-content">
-                    <h1>Selamat Datang Kembali!</h1>
-                    <p>Masuk ke akun Anda untuk menikmati berbagai produk makanan ringan berkualitas tinggi dari Snack In.</p>
+                    <h1>Bergabung dengan Snack In!</h1>
+                    <p>Daftarkan diri Anda dan nikmati berbagai produk makanan ringan berkualitas tinggi dengan pengalaman berbelanja yang menyenangkan.</p>
+                </div>
+                
+                <div class="features-list">
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Produk snack berkualitas tinggi</li>
+                        <li><i class="fas fa-truck"></i> Pengiriman cepat dan aman</li>
+                        <li><i class="fas fa-star"></i> Harga terjangkau dan kompetitif</li>
+                        <li><i class="fas fa-headset"></i> Customer service 24/7</li>
+                    </ul>
                 </div>
             </div>
             
-            <!-- Snack Illustration dengan Image -->
             <div class="snack-illustration">
-                <!-- Ganti src dengan path gambar snack Anda -->
                 <img src="/placeholder.svg?height=120&width=120" alt="Snack Illustration" class="snack-image" onerror="this.style.display='none'">
-                
-                <!-- Fallback illustration jika gambar tidak ada -->
                 <div class="snack-fallback">🍿</div>
             </div>
         </div>
 
-        <!-- Right side with login form -->
+        <!-- Right side with register form -->
         <div class="right-side">
-            <div class="login-form">
+            <div class="register-form">
                 <div class="form-header">
-                    <div class="logo-section">
-                        <img src="images\AHLINYA CEMILAN.png" alt="Snack In Logo">
-                    </div>
-                    <h2><i class="fas fa-user-circle"></i> Login</h2>
-                    <p>Masuk ke akun Anda</p>
+                    <h2><i class="fas fa-user-plus"></i> Daftar Akun</h2>
+                    <p>Buat akun baru untuk mulai berbelanja</p>
                 </div>
 
-                <?php if (isset($error)): ?>
+                <?php if (isset($success_message)): ?>
+                    <div class="alert alert-success">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <?php echo $success_message; ?>
+                            <br><small>Anda akan diarahkan ke halaman login...</small>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($errors)): ?>
                     <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <ul>
+                                <?php foreach ($errors as $error): ?>
+                                    <li><?php echo $error; ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
                     </div>
                 <?php endif; ?>
 
-                <?php if (isset($_GET['error'])): ?>
-                    <div class="alert alert-warning">
-                        <?php if ($_GET['error'] == 'login_required'): ?>
-                            <i class="fas fa-lock"></i> Silakan login terlebih dahulu.
-                        <?php elseif ($_GET['error'] == 'access_denied'): ?>
-                            <i class="fas fa-ban"></i> Akses ditolak. Anda tidak memiliki hak akses admin.
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
-                <form method="POST" id="loginForm">
+                <form method="POST" id="registerForm">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username" required>
+                        <div class="input-group">
+                            <input type="text" class="form-control with-icon" id="username" name="username" 
+                                   placeholder="Masukkan username" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required minlength="3">
+                            <i class="fas fa-user input-icon"></i>
+                        </div>
+                        <small style="color: #666; font-size: 0.75rem; margin-top: 0.25rem; display: block;">Username hanya boleh mengandung huruf, angka, dan underscore</small>
                     </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control with-icon" id="password" name="password" 
+                                   placeholder="Masukkan password" required minlength="6">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                        <div class="password-strength" id="passwordStrength"></div>
                     </div>
 
-                    <div class="form-options">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                            <label class="form-check-label" for="remember">Remember Me</label>
+                    <div class="form-group">
+                        <label for="confirm_password">Konfirmasi Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control with-icon" id="confirm_password" name="confirm_password" 
+                                   placeholder="Ulangi password" required minlength="6">
+                            <i class="fas fa-lock input-icon"></i>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-login" id="submitBtn">
-                        <i class="fas fa-sign-in-alt"></i> Masuk
+                    <button type="submit" class="btn-register" id="submitBtn">
+                        <i class="fas fa-user-plus"></i> Daftar Sekarang
                     </button>
 
-                    <div class="register-link">
-                        <p>Belum punya akun? <a href="register.php">Daftar di sini</a></p>
+                    <div class="login-link">
+                        <p>Sudah punya akun? <a href="login.php">Masuk di sini</a></p>
                         <p><a href="user_ui.php">Kembali ke Beranda</a></p>
                     </div>
                 </form>
@@ -704,31 +741,88 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
-        // Add loading animation on form submit
-        document.getElementById('loginForm').addEventListener('submit', function() {
+        // Form validation and animations
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            // Validasi username format
+            const usernameRegex = /^[a-zA-Z0-9_]+$/;
+            if (!usernameRegex.test(username)) {
+                e.preventDefault();
+                alert('Username hanya boleh mengandung huruf, angka, dan underscore!');
+                return false;
+            }
+            
+            // Validasi password match
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Konfirmasi password tidak cocok!');
+                return false;
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
         });
 
-        // Add focus animations
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            let message = '';
+            
+            if (password.length >= 6) strength++;
+            if (password.match(/[a-z]/)) strength++;
+            if (password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            switch (strength) {
+                case 0:
+                case 1:
+                    message = '<span class="strength-weak"><i class="fas fa-times-circle"></i> Lemah</span>';
+                    break;
+                case 2:
+                case 3:
+                    message = '<span class="strength-medium"><i class="fas fa-exclamation-circle"></i> Sedang</span>';
+                    break;
+                case 4:
+                case 5:
+                    message = '<span class="strength-strong"><i class="fas fa-check-circle"></i> Kuat</span>';
+                    break;
+            }
+            
+            strengthDiv.innerHTML = message;
+        });
+
+        // Confirm password validation
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.setCustomValidity('Password tidak cocok');
+                this.style.borderColor = '#dc2626';
+            } else {
+                this.setCustomValidity('');
+                this.style.borderColor = '#e5e7eb';
+            }
+        });
+
+        // Form field animations
         const inputs = document.querySelectorAll('.form-control');
-        inputs.forEach(input => {
+        inputs.forEach((input, index) => {
             input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'translateY(-2px)';
-                this.parentElement.style.transition = 'all 0.3s ease';
+                this.parentElement.parentElement.style.transform = 'translateY(-2px)';
+                this.parentElement.parentElement.style.transition = 'all 0.3s ease';
             });
             
             input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'translateY(0)';
-            });
-
-            // Typing animation effect
-            input.addEventListener('input', function() {
-                this.style.animation = 'inputFocus 0.3s ease-out';
-                setTimeout(() => {
-                    this.style.animation = '';
-                }, 300);
+                this.parentElement.parentElement.style.transform = 'translateY(0)';
             });
         });
 
@@ -742,6 +836,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     alert.style.display = 'none';
                 }, 300);
             }, 5000);
+        });
+
+        // Username validation
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            const usernameRegex = /^[a-zA-Z0-9_]+$/;
+            
+            if (username && !usernameRegex.test(username)) {
+                this.style.borderColor = '#dc2626';
+                this.setCustomValidity('Username hanya boleh mengandung huruf, angka, dan underscore');
+            } else {
+                this.style.borderColor = '#e5e7eb';
+                this.setCustomValidity('');
+            }
         });
 
         // Floating particles animation
@@ -758,79 +866,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Recreate particles on window resize
         window.addEventListener('resize', createParticle);
-
-        // Add ripple effect to button
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-            
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.style.position = 'absolute';
-            ripple.style.borderRadius = '50%';
-            ripple.style.background = 'rgba(255, 255, 255, 0.3)';
-            ripple.style.transform = 'scale(0)';
-            ripple.style.animation = 'ripple 0.6s linear';
-            ripple.style.pointerEvents = 'none';
-            
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-
-        // Add ripple animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(4);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Form validation with animation
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                e.preventDefault();
-                
-                // Shake animation for empty fields
-                if (!username) {
-                    document.getElementById('username').style.animation = 'shake 0.5s ease-in-out';
-                }
-                if (!password) {
-                    document.getElementById('password').style.animation = 'shake 0.5s ease-in-out';
-                }
-                
-                setTimeout(() => {
-                    document.getElementById('username').style.animation = '';
-                    document.getElementById('password').style.animation = '';
-                }, 500);
-                
-                return false;
-            }
-        });
-
-        // Add shake animation
-        const shakeStyle = document.createElement('style');
-        shakeStyle.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                20%, 40%, 60%, 80% { transform: translateX(5px); }
-            }
-        `;
-        document.head.appendChild(shakeStyle);
     </script>
 </body>
 </html>

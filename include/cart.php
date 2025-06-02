@@ -1,432 +1,411 @@
 <?php
 session_start();
-$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-$subtotal = array_sum(array_map(function ($item) {
-    return $item['harga'] * $item['jumlah'];
-}, $cart));
+include 'include/koneksi.php';
 
-// Hitung biaya admin 5%
-$biaya_admin = $subtotal * 0.05;
-$totalHarga = $subtotal + $biaya_admin;
+// Check if user is logged in
+if (!isset($_SESSION['id_user'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$id_user = $_SESSION['id_user'];
+
+// Get cart items
+$query = mysqli_query($koneksi, "SELECT c.*, p.nama_produk, p.harga, p.gambar 
+                                FROM cart c 
+                                JOIN data_produk2 p ON c.id_produk = p.id_produk 
+                                WHERE c.id_user = '$id_user'");
+
+// Calculate total
+$total = 0;
+$cart_items = [];
+
+while ($row = mysqli_fetch_assoc($query)) {
+    $cart_items[] = $row;
+    $total += $row['harga'] * $row['jumlah'];
+}
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keranjang Belanja - Snack In</title>
+    <title>SnackIn - Shopping Cart</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom CSS -->
     <style>
-        /* [Previous CSS styles remain the same] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f9f9f9;
+            background-color: #f8f9fa;
         }
-
-        .main-header {
-            background-color: #00227c;
-            color: white;
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        
+        .cart-item {
+            transition: background-color 0.3s ease;
         }
-
-        .main-header .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        
+        .cart-item:hover {
+            background-color: #f8f9fa;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
-        }
-
-        .cart-section {
-            padding: 40px 0;
-            min-height: calc(100vh - 300px);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .cart-title {
-            color: #00227c;
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 700;
-            font-size: 32px;
-        }
-
-        .cart-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .cart-table th {
-            background-color: #00227c;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .cart-table td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-            vertical-align: middle;
-        }
-
-        .cart-img {
+        
+        .product-img {
             width: 80px;
             height: 80px;
             object-fit: cover;
-            border-radius: 8px;
         }
-
-        .cart-summary {
-            margin-top: 30px;
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        
+        .quantity-input {
+            width: 60px;
+            text-align: center;
         }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #00227c;
-            color: white;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-orange {
-            background-color: #f69e22;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-        .quantity-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            display: inline-flex;
-            align-items: center;
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s linear;
         }
-
-        .quantity-btn:hover {
-            background-color: #00227c;
-            color: white;
+        
+        .loading-overlay.show {
+            visibility: visible;
+            opacity: 1;
         }
-
-        .cart-remove {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
+        
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-
-        .modal-content {
-            border-radius: 10px;
+        
+        .spinner-text {
+            margin-top: 10px;
+            font-weight: 500;
+            color: #333;
         }
-
-        .modal-header {
-            background-color: #00227c;
-            color: white;
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
         }
-
-        .form-control, .form-select {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+        
+        .empty-cart {
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .empty-cart i {
+            font-size: 5rem;
+            color: #dee2e6;
             margin-bottom: 20px;
-        }
-
-        .payment-info {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .cart-table {
-                font-size: 14px;
-            }
-            
-            .cart-img {
-                width: 60px;
-                height: 60px;
-            }
         }
     </style>
 </head>
-
 <body>
-    <!-- Main Header -->
-    <header class="main-header">
-        <div class="container">
-            <a href="../user_ui.php" class="logo">
-                <img src="../assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
-                <span>SNACK IN</span>
-            </a>
-            <div class="header-actions">
-                <a href="../user_ui.php" class="btn">Kembali ke Beranda</a>
-            </div>
-        </div>
-    </header>
-
-    <!-- Cart Section -->
-    <section class="cart-section">
-        <div class="container">
-            <h1 class="cart-title">Keranjang Belanja</h1>
-
-            <?php if (empty($cart)) { ?>
-                <div class="text-center">
-                    <h3>Keranjang Anda Kosong</h3>
-                    <p>Silakan tambahkan produk ke keranjang terlebih dahulu.</p>
-                    <a href="../user_ui.php" class="btn btn-orange">Belanja Sekarang</a>
-                </div>
-            <?php } else { ?>
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="table-responsive">
-                            <table class="cart-table">
-                                <thead>
-                                    <tr>
-                                        <th>Produk</th>
-                                        <th>Nama</th>
-                                        <th>Harga</th>
-                                        <th>Jumlah</th>
-                                        <th>Total</th>
-                                        <th>Aksi</th>
+    <?php include 'include/user_header.php'; ?>
+    
+    <!-- Main Content -->
+    <div class="container py-5">
+        <h2 class="mb-4">Shopping Cart</h2>
+        
+        <?php if (count($cart_items) > 0): ?>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($cart_items as $item): ?>
+                                    <tr class="cart-item" data-id="<?php echo $item['id_cart']; ?>">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="<?php echo !empty($item['gambar']) ? $item['gambar'] : 'assets/images/no-image.jpg'; ?>" class="product-img rounded me-3" alt="<?php echo htmlspecialchars($item['nama_produk']); ?>">
+                                                <div>
+                                                    <h6 class="mb-0"><?php echo htmlspecialchars($item['nama_produk']); ?></h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>Rp <?php echo number_format($item['harga'], 0, ',', '.'); ?></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <button class="btn btn-sm btn-outline-secondary me-2 btn-decrease" data-id="<?php echo $item['id_cart']; ?>">-</button>
+                                                <input type="number" class="form-control form-control-sm quantity-input" id="quantity-<?php echo $item['id_cart']; ?>" value="<?php echo $item['jumlah']; ?>" min="1" data-id="<?php echo $item['id_cart']; ?>">
+                                                <button class="btn btn-sm btn-outline-secondary ms-2 btn-increase" data-id="<?php echo $item['id_cart']; ?>">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="subtotal">Rp <?php echo number_format($item['harga'] * $item['jumlah'], 0, ',', '.'); ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger btn-remove" data-id="<?php echo $item['id_cart']; ?>">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($cart as $item) { ?>
-                                        <tr>
-                                            <td>
-                                                <img src="../<?php echo $item['gambar']; ?>" alt="<?php echo $item['nama']; ?>" class="cart-img">
-                                            </td>
-                                            <td><?php echo $item['nama']; ?></td>
-                                            <td>Rp <?php echo number_format($item['harga'], 0, ',', '.'); ?></td>
-                                            <td>
-                                                <button class="quantity-btn decrease" data-id="<?php echo $item['id']; ?>">-</button>
-                                                <span style="margin: 0 10px;"><?php echo $item['jumlah']; ?></span>
-                                                <button class="quantity-btn increase" data-id="<?php echo $item['id']; ?>">+</button>
-                                            </td>
-                                            <td>Rp <?php echo number_format($item['harga'] * $item['jumlah'], 0, ',', '.'); ?></td>
-                                            <td>
-                                                <button class="cart-remove remove-item" data-id="<?php echo $item['id']; ?>">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php } ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="col-lg-4">
-                        <div class="cart-summary">
-                            <h3>Ringkasan Pesanan</h3>
-                            <div class="d-flex justify-content-between">
-                                <span>Subtotal</span>
-                                <span>Rp <?php echo number_format($subtotal, 0, ',', '.'); ?></span>
+                    
+                    <div class="d-flex justify-content-end mt-4">
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">Order Summary</h5>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span id="cart-total">Rp <?php echo number_format($total, 0, ',', '.'); ?></span>
+                                </div>
+                                <button id="btn-checkout" class="btn btn-primary w-100">Checkout</button>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Biaya Admin (5%)</span>
-                                <span>Rp <?php echo number_format($biaya_admin, 0, ',', '.'); ?></span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>Total</strong>
-                                <strong>Rp <?php echo number_format($totalHarga, 0, ',', '.'); ?></strong>
-                            </div>
-
-                            <button class="btn btn-orange w-100 mt-4" data-bs-toggle="modal" data-bs-target="#checkoutModal">
-                                Checkout Sekarang
-                            </button>
                         </div>
                     </div>
                 </div>
-            <?php } ?>
-        </div>
-    </section>
-
-    <!-- Modal Checkout -->
-    <div class="modal fade" id="checkoutModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Form Checkout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="checkout-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="nama" class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" name="nama" id="nama" required 
-                                   value="<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : ''; ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="alamat" class="form-label">Alamat Pengiriman</label>
-                            <textarea class="form-control" name="alamat" id="alamat" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="metode_pembayaran" class="form-label">Metode Pembayaran</label>
-                            <select name="metode_pembayaran" id="metode_pembayaran" class="form-select" required>
-                                <option value="">-- Pilih Metode Pembayaran --</option>
-                                <option value="Transfer Bank">Transfer Bank</option>
-                                <option value="Qris">QRIS</option>
-                                <option value="Cash">Cash on Delivery (COD)</option>
-                            </select>
-                        </div>
-
-                        <div id="info-pembayaran" class="payment-info" style="display: none;"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-orange">Bayar Sekarang</button>
-                    </div>
-                </form>
             </div>
+        <?php else: ?>
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <h4>Your cart is empty</h4>
+                <p>Looks like you haven't added any products to your cart yet.</p>
+                <a href="user_ui.php" class="btn btn-primary mt-3">Continue Shopping</a>
+            </div>
+        <?php endif; ?>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+            <div class="spinner-text">Processing...</div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <script>
         $(document).ready(function() {
-            // Remove item from cart
-            $(".remove-item").click(function() {
-                var id = $(this).data("id");
-                $.post("../include/cart_action.php", {
-                    action: "remove",
-                    id: id
-                }, function(response) {
-                    location.reload();
-                });
-            });
-
-            // Increase item quantity
-            $(".increase").click(function() {
-                var id = $(this).data("id");
-                $.post("../include/cart_action.php", {
-                    action: "increase",
-                    id: id
-                }, function(response) {
-                    location.reload();
-                });
-            });
-
-            // Decrease item quantity
-            $(".decrease").click(function() {
-                var id = $(this).data("id");
-                $.post("../include/cart_action.php", {
-                    action: "decrease",
-                    id: id
-                }, function(response) {
-                    location.reload();
-                });
-            });
-
-            // Checkout form submission
-            $("#checkout-form").submit(function(event) {
-                event.preventDefault();
+            // Show loading overlay
+            function showLoading() {
+                $('#loadingOverlay').addClass('show');
+            }
+            
+            // Hide loading overlay
+            function hideLoading() {
+                $('#loadingOverlay').removeClass('show');
+            }
+            
+            // Show toast notification
+            function showToast(message, type = 'success') {
+                const toastId = 'toast-' + Date.now();
+                const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
                 
-                $.post("../include/cart_action.php", $(this).serialize() + "&action=checkout", function(response) {
-                    try {
-                        var result = JSON.parse(response);
-                        if(result.success) {
-                            alert("Pesanan berhasil dibuat! ID Pesanan: " + result.order_id);
-                            window.location.href = "../history.php";
+                const toast = `
+                    <div class="toast ${bgClass} text-white" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+                
+                $('.toast-container').append(toast);
+                
+                const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
+                    delay: 3000
+                });
+                
+                toastElement.show();
+                
+                // Remove toast from DOM after it's hidden
+                $(`#${toastId}`).on('hidden.bs.toast', function() {
+                    $(this).remove();
+                });
+            }
+            
+            // Update cart total
+            function updateCartTotal() {
+                let total = 0;
+                $('.cart-item').each(function() {
+                    const price = parseFloat($(this).find('td:nth-child(2)').text().replace('Rp ', '').replace('.', ''));
+                    const quantity = parseInt($(this).find('.quantity-input').val());
+                    total += price * quantity;
+                });
+                
+                $('#cart-total').text('Rp ' + total.toLocaleString('id-ID'));
+            }
+            
+            // Update cart item
+            function updateCartItem(id_cart, jumlah) {
+                showLoading();
+                
+                $.ajax({
+                    url: 'include/cart_action.php',
+                    type: 'POST',
+                    data: {
+                        update_cart: true,
+                        id_cart: id_cart,
+                        jumlah: jumlah
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        hideLoading();
+                        
+                        if (response.status === 'success') {
+                            if (jumlah <= 0) {
+                                $(`.cart-item[data-id="${id_cart}"]`).remove();
+                                
+                                // Check if cart is empty
+                                if ($('.cart-item').length === 0) {
+                                    location.reload();
+                                }
+                            } else {
+                                // Update subtotal
+                                const price = parseFloat($(`.cart-item[data-id="${id_cart}"]`).find('td:nth-child(2)').text().replace('Rp ', '').replace('.', ''));
+                                const subtotal = price * jumlah;
+                                $(`.cart-item[data-id="${id_cart}"]`).find('.subtotal').text('Rp ' + subtotal.toLocaleString('id-ID'));
+                            }
+                            
+                            updateCartTotal();
+                            showToast(response.message, 'success');
                         } else {
-                            alert("Terjadi kesalahan: " + result.error);
+                            showToast(response.message, 'error');
                         }
-                    } catch(e) {
-                        console.error("Error:", response);
-                        alert("Terjadi kesalahan saat memproses pesanan.");
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        showToast('An error occurred: ' + error, 'error');
+                    }
+                });
+            }
+            
+            // Increase quantity
+            $('.btn-increase').click(function() {
+                const id_cart = $(this).data('id');
+                const quantityInput = $(`#quantity-${id_cart}`);
+                let quantity = parseInt(quantityInput.val()) + 1;
+                quantityInput.val(quantity);
+                updateCartItem(id_cart, quantity);
+            });
+            
+            // Decrease quantity
+            $('.btn-decrease').click(function() {
+                const id_cart = $(this).data('id');
+                const quantityInput = $(`#quantity-${id_cart}`);
+                let quantity = parseInt(quantityInput.val()) - 1;
+                if (quantity >= 0) {
+                    quantityInput.val(quantity);
+                    updateCartItem(id_cart, quantity);
+                }
+            });
+            
+            // Update quantity on input change
+            $('.quantity-input').change(function() {
+                const id_cart = $(this).data('id');
+                let quantity = parseInt($(this).val());
+                
+                if (isNaN(quantity) || quantity < 0) {
+                    quantity = 0;
+                }
+                
+                $(this).val(quantity);
+                updateCartItem(id_cart, quantity);
+            });
+            
+            // Remove item from cart
+            $('.btn-remove').click(function() {
+                const id_cart = $(this).data('id');
+                
+                showLoading();
+                
+                $.ajax({
+                    url: 'include/cart_action.php',
+                    type: 'POST',
+                    data: {
+                        remove_from_cart: true,
+                        id_cart: id_cart
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        hideLoading();
+                        
+                        if (response.status === 'success') {
+                            $(`.cart-item[data-id="${id_cart}"]`).remove();
+                            updateCartTotal();
+                            showToast(response.message, 'success');
+                            
+                            // Check if cart is empty
+                            if ($('.cart-item').length === 0) {
+                                location.reload();
+                            }
+                        } else {
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        showToast('An error occurred: ' + error, 'error');
                     }
                 });
             });
-
-            // Payment method change
-            $("#metode_pembayaran").on("change", function() {
-                let metode = $(this).val();
-                let infoContainer = $("#info-pembayaran");
-
-                if (metode === "Qris") {
-                    infoContainer.html(`
-                        <h4>Pembayaran via QRIS</h4>
-                        <p>Scan QR code menggunakan aplikasi e-wallet Anda.</p>
-                    `).show();
-                } else if (metode === "Transfer Bank") {
-                    infoContainer.html(`
-                        <h4>Transfer Bank</h4>
-                        <p><strong>Bank BCA: 1234567890</strong></p>
-                        <p>a.n. SNACK IN</p>
-                    `).show();
-                } else if (metode === "Cash") {
-                    infoContainer.html(`
-                        <h4>Cash on Delivery (COD)</h4>
-                        <p>Bayar saat pesanan tiba.</p>
-                    `).show();
-                } else {
-                    infoContainer.hide();
-                }
+            
+            // Checkout
+            $('#btn-checkout').click(function() {
+                showLoading();
+                
+                $.ajax({
+                    url: 'include/cart_action.php',
+                    type: 'POST',
+                    data: {
+                        checkout: true
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        hideLoading();
+                        
+                        if (response.status === 'success') {
+                            showToast(response.message, 'success');
+                            
+                            // Redirect to history page after successful checkout
+                            setTimeout(function() {
+                                window.location.href = 'history.php';
+                            }, 1500);
+                        } else {
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        showToast('An error occurred: ' + error, 'error');
+                    }
+                });
             });
         });
     </script>
 </body>
-
 </html>
