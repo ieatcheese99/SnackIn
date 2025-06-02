@@ -160,7 +160,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             color: var(--white);
             font-weight: 800;
             line-height: 1.2;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .hero-content p {
@@ -169,7 +169,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             max-width: 600px;
             color: var(--white);
             line-height: 1.6;
-            text-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
         }
 
         .hero-btn {
@@ -182,7 +182,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             border-radius: 50px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .hero-btn .arrow-icon {
@@ -194,7 +194,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         .hero-btn:hover {
             background-color: #e67e00;
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
         }
 
         .hero-btn:hover .arrow-icon {
@@ -214,7 +214,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         .hero-image img {
             max-width: 100%;
             max-height: 90%;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
             animation: float 6s ease-in-out infinite;
         }
 
@@ -222,9 +222,11 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             0% {
                 transform: translateY(0px);
             }
+
             50% {
                 transform: translateY(-15px);
             }
+
             100% {
                 transform: translateY(0px);
             }
@@ -458,6 +460,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.8);
             }
+
             to {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
@@ -731,7 +734,8 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             gap: 15px;
         }
 
-        .btn-login, .btn-register {
+        .btn-login,
+        .btn-register {
             padding: 12px 25px;
             border-radius: 50px;
             font-weight: 500;
@@ -813,6 +817,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.8);
             }
+
             to {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
@@ -835,9 +840,11 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             0% {
                 transform: scale(0);
             }
+
             50% {
                 transform: scale(1.1);
             }
+
             100% {
                 transform: scale(1);
             }
@@ -910,12 +917,33 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             justify-content: center;
             color: #666;
             font-size: 12px;
+            position: relative;
         }
 
         .testimonial-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .testimonial-image .fallback-text {
+            display: none;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .testimonial-image.image-error {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        }
+
+        .testimonial-image.image-error .fallback-text {
+            display: block;
+        }
+
+        .testimonial-image.image-error img {
+            display: none;
         }
 
         .testimonial-stars {
@@ -1179,21 +1207,21 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
     <!-- Login Popup -->
     <?php if (!$isLoggedIn): ?>
-    <div class="attractive-login-popup" id="login-popup">
-        <div class="login-popup-content">
-            <div class="login-popup-close">&times;</div>
-            <div class="login-popup-icon">
-                <i class="fas fa-user-lock"></i>
-            </div>
-            <h2>Login Required</h2>
-            <p>Please login to add items to your cart and access all features!</p>
-            <div class="login-popup-buttons">
-                <a href="login.php" class="btn-login">Login Now</a>
-                <a href="register.php" class="btn-register">Register</a>
+        <div class="attractive-login-popup" id="login-popup">
+            <div class="login-popup-content">
+                <div class="login-popup-close">&times;</div>
+                <div class="login-popup-icon">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h2>Login Required</h2>
+                <p>Please login to add items to your cart and access all features!</p>
+                <div class="login-popup-buttons">
+                    <a href="login.php" class="btn-login">Login Now</a>
+                    <a href="register.php" class="btn-register">Register</a>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="login-popup-overlay" id="login-popup-overlay"></div>
+        <div class="login-popup-overlay" id="login-popup-overlay"></div>
     <?php endif; ?>
 
     <!-- Cart Popup -->
@@ -1214,7 +1242,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                         <div class="product-stock" id="popup-product-stock"></div>
                     </div>
                 </div>
-                
+
                 <div class="quantity-section">
                     <label>Quantity:</label>
                     <div class="quantity-controls">
@@ -1322,7 +1350,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
         <!-- Category Filter Buttons -->
         <div class="category-filter">
             <button class="category-btn active" data-category="all">Semua</button>
-            <?php 
+            <?php
             mysqli_data_seek($queryKategori, 0); // Reset pointer
             while ($kategori = mysqli_fetch_assoc($queryKategori)) { ?>
                 <button class="category-btn" data-category="<?php echo htmlspecialchars($kategori['nama']); ?>">
@@ -1376,8 +1404,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <!-- Testimonial 1 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 1" style="display: none;">
-                        <span>Customer 1</span>
+                        <img src="images/pembeli/4.png" alt="Abidilah Akmal"
+                            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                        <div class="fallback-text">Abidilah<br>Akmal</div>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1393,8 +1422,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <!-- Testimonial 2 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 2" style="display: none;">
-                        <span>Customer 2</span>
+                        <img src="images/pembeli/3.png" alt="Naila Aribah"
+                            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                        <div class="fallback-text">Naila<br>Aribah</div>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1410,8 +1440,9 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 <!-- Testimonial 3 -->
                 <div class="testimonial-item">
                     <div class="testimonial-image">
-                        <img src="/placeholder.svg?height=100&width=100" alt="Customer 3" style="display: none;">
-                        <span>Customer 3</span>
+                        <img src="images/pembeli/2.png" alt="Ahmad Fauzi"
+                            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                        <div class="fallback-text">Ahmad<br>Fauzi</div>
                     </div>
                     <div class="testimonial-stars">
                         <i class="fas fa-star"></i>
@@ -1489,10 +1520,10 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
 
     <!-- Notification Element -->
     <div id="cart-notification"></div>
-    
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <script>
         $(document).ready(function() {
             // Hero Slider Functionality
@@ -1504,7 +1535,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
             let currentSlide = 0;
             let slideInterval;
             const slideCount = slides.length;
-            
+
             // Create navigation dots
             for (let i = 0; i < slideCount; i++) {
                 const dot = document.createElement('div');
@@ -1516,37 +1547,37 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 });
                 sliderNav.appendChild(dot);
             }
-            
+
             // Initialize slider
             function initSlider() {
                 updateSlider();
                 startAutoSlide();
-                
+
                 prevBtn.addEventListener('click', () => {
                     goToSlide(currentSlide - 1);
                     resetInterval();
                 });
-                
+
                 nextBtn.addEventListener('click', () => {
                     goToSlide(currentSlide + 1);
                     resetInterval();
                 });
             }
-            
+
             function goToSlide(index) {
                 if (index < 0) {
                     index = slideCount - 1;
                 } else if (index >= slideCount) {
                     index = 0;
                 }
-                
+
                 currentSlide = index;
                 updateSlider();
             }
-            
+
             function updateSlider() {
                 slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
-                
+
                 const dots = document.querySelectorAll('.slider-dot');
                 dots.forEach((dot, index) => {
                     if (index === currentSlide) {
@@ -1556,26 +1587,26 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     }
                 });
             }
-            
+
             function startAutoSlide() {
                 slideInterval = setInterval(() => {
                     goToSlide(currentSlide + 1);
                 }, 5000);
             }
-            
+
             function resetInterval() {
                 clearInterval(slideInterval);
                 startAutoSlide();
             }
-            
+
             initSlider();
-            
+
             // Check if user is logged in
             const isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
-            
+
             // Cart popup variables
             let currentProduct = {};
-            
+
             // Category Filter Functionality
             $(".category-btn").click(function() {
                 const selectedCategory = $(this).data("category");
@@ -1599,7 +1630,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     $(`.produk-card[data-category="${category}"]`).show();
                 }
             }
-            
+
             // Login popup functions
             function showLoginPopup() {
                 $('#login-popup').addClass('active').fadeIn(100);
@@ -1607,86 +1638,86 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 $('body').css('overflow', 'hidden');
                 return false;
             }
-            
+
             function hideLoginPopup() {
                 $('#login-popup').removeClass('active').fadeOut(200);
                 $('#login-popup-overlay').removeClass('active').fadeOut(200);
                 $('body').css('overflow', '');
             }
-            
+
             $('.login-popup-close, #login-popup-overlay').click(function() {
                 hideLoginPopup();
             });
-            
+
             $('.login-popup-content').click(function(e) {
                 e.stopPropagation();
             });
-            
+
             // Cart popup functions
             function showCartPopup(product) {
                 currentProduct = product;
-                
+
                 $('#popup-product-image').attr('src', product.gambar);
                 $('#popup-product-name').text(product.nama);
                 $('#popup-product-price').text('Rp ' + formatNumber(product.harga));
                 $('#popup-product-stock').text('Stock: ' + product.stok + ' items');
                 $('#price-per-item').text('Rp ' + formatNumber(product.harga));
-                
+
                 // Reset quantity
                 $('#quantity-input').val(1);
                 updateTotal();
-                
+
                 // Set max quantity based on stock
                 $('#quantity-input').attr('max', product.stok);
-                
+
                 $('#cart-popup').fadeIn(300);
                 $('body').css('overflow', 'hidden');
             }
-            
+
             function hideCartPopup() {
                 $('#cart-popup').fadeOut(200);
                 $('body').css('overflow', '');
             }
-            
+
             function updateTotal() {
                 const quantity = parseInt($('#quantity-input').val()) || 1;
                 const price = currentProduct.harga;
                 const total = quantity * price;
-                
+
                 $('#total-quantity').text(quantity);
                 $('#total-price').text('Rp ' + formatNumber(total));
-                
+
                 // Update button states
                 $('#quantity-minus').prop('disabled', quantity <= 1);
                 $('#quantity-plus').prop('disabled', quantity >= currentProduct.stok);
             }
-            
+
             function formatNumber(number) {
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
-            
+
             // Success popup functions
             function showSuccessPopup() {
                 $('#success-popup').fadeIn(300);
                 $('body').css('overflow', 'hidden');
             }
-            
+
             window.hideSuccessPopup = function() {
                 $('#success-popup').fadeOut(200);
                 $('body').css('overflow', '');
             }
-            
+
             // Cart popup event listeners
             $('#cart-popup-close, #continue-shopping').click(function() {
                 hideCartPopup();
             });
-            
+
             $('#cart-popup').click(function(e) {
                 if (e.target === this) {
                     hideCartPopup();
                 }
             });
-            
+
             $('#quantity-minus').click(function() {
                 const current = parseInt($('#quantity-input').val());
                 if (current > 1) {
@@ -1694,7 +1725,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     updateTotal();
                 }
             });
-            
+
             $('#quantity-plus').click(function() {
                 const current = parseInt($('#quantity-input').val());
                 if (current < currentProduct.stok) {
@@ -1702,7 +1733,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     updateTotal();
                 }
             });
-            
+
             $('#quantity-input').on('input change', function() {
                 let value = parseInt($(this).val()) || 1;
                 if (value < 1) value = 1;
@@ -1710,7 +1741,7 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                 $(this).val(value);
                 updateTotal();
             });
-            
+
             // Handle cart icon click
             $('.action-icon a[href="include/cart.php"]').click(function(e) {
                 if (!isLoggedIn) {
@@ -1732,12 +1763,12 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     e.preventDefault();
                     return showLoginPopup();
                 }
-                
+
                 // Check if button is disabled (out of stock)
                 if ($(this).prop('disabled')) {
                     return;
                 }
-                
+
                 const product = {
                     id: $(this).data("id"),
                     nama: $(this).data("nama"),
@@ -1745,14 +1776,14 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     gambar: $(this).data("gambar"),
                     stok: $(this).data("stok")
                 };
-                
+
                 showCartPopup(product);
             });
-            
+
             // Confirm add to cart
             $('#add-to-cart-confirm').click(function() {
                 const quantity = parseInt($('#quantity-input').val());
-                
+
                 $.ajax({
                     url: "include/cart_action.php",
                     type: "POST",
@@ -1767,19 +1798,19 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                     success: function(response) {
                         try {
                             var result = JSON.parse(response);
-                            if(result.success) {
+                            if (result.success) {
                                 updateCartCount();
                                 hideCartPopup();
                                 showNotification(`${quantity}x ${currentProduct.nama} telah ditambahkan ke keranjang!`);
-                                
+
                                 // Update stock display
                                 const productCard = $(`.add-to-cart[data-id="${currentProduct.id}"]`).closest('.produk-card');
                                 const newStock = currentProduct.stok - quantity;
-                                
+
                                 // Update stock info
                                 let stockText = '';
                                 let stockClass = '';
-                                
+
                                 if (newStock == 0) {
                                     stockText = 'Out of Stock';
                                     stockClass = 'stock-out';
@@ -1791,19 +1822,19 @@ $queryKategori = mysqli_query($db, "SELECT id, nama FROM kategori ORDER BY nama"
                                     stockText = `Stock: ${newStock} items`;
                                     stockClass = '';
                                 }
-                                
+
                                 productCard.find('.stock-info')
                                     .removeClass('stock-low stock-out')
                                     .addClass(stockClass)
                                     .text(stockText);
-                                
+
                                 // Update data attribute
                                 productCard.find('.add-to-cart').data('stok', newStock);
-                                
+
                             } else {
                                 showNotification(result.message || "Gagal menambahkan ke keranjang");
                             }
-                        } catch(e) {
+                        } catch (e) {
                             console.error("Error parsing response:", response);
                             updateCartCount();
                             hideCartPopup();
