@@ -1,5 +1,5 @@
 <?php
-// Database configuration for data_produk2
+// Database configuration
 $host = "localhost";
 $username = "root"; 
 $password = "";
@@ -35,6 +35,38 @@ if (!function_exists('escape_string')) {
     function escape_string($string) {
         global $db;
         return mysqli_real_escape_string($db, $string);
+    }
+}
+
+if (!function_exists('sanitize_input')) {
+    function sanitize_input($data) {
+        if (is_array($data)) {
+            return array_map('sanitize_input', $data);
+        }
+        return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('logAdminAction')) {
+    function logAdminAction($action, $details = '', $level = 'INFO') {
+        $user = $_SESSION['username'] ?? 'anonymous';
+        $log_entry = date('Y-m-d H:i:s') . " - $level - ADMIN ACTION - " . $action;
+        
+        if ($details) {
+            $log_entry .= " - " . $details;
+        }
+        
+        $log_entry .= " - User: " . $user;
+        $log_entry .= " - IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $log_entry .= PHP_EOL;
+        
+        // Create logs directory if it doesn't exist
+        $log_dir = __DIR__ . '/../logs';
+        if (!is_dir($log_dir)) {
+            mkdir($log_dir, 0755, true);
+        }
+        
+        error_log($log_entry, 3, $log_dir . '/admin.log');
     }
 }
 ?>

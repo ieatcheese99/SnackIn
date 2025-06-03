@@ -111,19 +111,93 @@ include 'include/admin_header.php';
 
 <style>
     :root {
-        --orange-primary: #ff9800;
-        --orange-secondary: #f57c00;
-        --orange-light: #ffb74d;
-        --orange-dark: #e65100;
+        --primary-color: #00227c;
+        --secondary-color: #001a5e;
+        --accent-color: #f48c06;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --dark-blue: #00227c;
+        --white: #ffffff;
+        --light-gray: #f8f9fa;
+        --orange-bg: #f69e22;
+        --border-radius: 12px;
+        --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
     }
 
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: var(--orange-bg);
+        min-height: 100vh;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    /* Navigation Buttons */
+    .nav-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--primary-color);
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: var(--transition);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-btn:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        color: var(--primary-color);
+    }
+
+    .nav-btn.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Form Container */
     .form-container {
         background: white;
         border-radius: 20px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         padding: 40px;
         margin: 20px auto;
         max-width: 800px;
+        backdrop-filter: blur(10px);
     }
 
     .form-header {
@@ -132,7 +206,7 @@ include 'include/admin_header.php';
     }
 
     .form-header h1 {
-        color: var(--orange-primary);
+        color: var(--primary-color);
         font-weight: 700;
         margin-bottom: 10px;
         font-size: 28px;
@@ -151,21 +225,24 @@ include 'include/admin_header.php';
         margin: 0 auto 20px;
         display: block;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 3px solid var(--primary-color);
     }
 
     .form-control, .form-select {
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         border: 2px solid #e9ecef;
         padding: 15px 20px;
         font-size: 16px;
-        transition: all 0.3s ease;
-        background: #f8f9fa;
+        transition: var(--transition);
+        background: var(--light-gray);
+        font-family: 'Poppins', sans-serif;
     }
 
     .form-control:focus, .form-select:focus {
-        border-color: var(--orange-primary);
-        box-shadow: 0 0 0 4px rgba(255,152,0,0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(0, 34, 124, 0.1);
         background: white;
+        outline: none;
     }
 
     .form-label {
@@ -173,37 +250,54 @@ include 'include/admin_header.php';
         color: #333;
         margin-bottom: 8px;
         font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
+    .form-label i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    /* Buttons */
     .btn-primary {
-        background: var(--orange-primary);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         border: none;
         padding: 15px 30px;
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         font-weight: 600;
         font-size: 16px;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         width: 100%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
 
     .btn-primary:hover {
-        background: var(--orange-secondary);
+        background: linear-gradient(135deg, var(--secondary-color) 0%, #000f3d 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(255,152,0,0.3);
+        box-shadow: 0 8px 25px rgba(0, 34, 124, 0.3);
+        color: white;
     }
 
     .btn-secondary {
         background: #6c757d;
         border: none;
         padding: 15px 30px;
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         font-weight: 600;
         font-size: 16px;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         color: white;
         text-decoration: none;
-        display: inline-block;
-        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         width: 100%;
         margin-top: 10px;
     }
@@ -212,24 +306,29 @@ include 'include/admin_header.php';
         background: #5a6268;
         transform: translateY(-2px);
         color: white;
+        text-decoration: none;
     }
 
+    /* Alert Styles */
     .alert {
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         border: none;
         padding: 15px 20px;
         margin-bottom: 25px;
-        font-weight: 600;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .alert-success {
-        background: #d4edda;
-        color: #155724;
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        color: white;
     }
 
     .alert-danger {
-        background: #f8d7da;
-        color: #721c24;
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
     }
 
     .input-group {
@@ -241,65 +340,69 @@ include 'include/admin_header.php';
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: #666;
+        color: var(--primary-color);
         z-index: 10;
+        font-size: 16px;
     }
 
-    .form-control.with-icon {
+    .form-control.with-icon, .form-select.with-icon {
         padding-left: 45px;
     }
 
     #image-preview {
         max-width: 200px;
         max-height: 200px;
-        margin-top: 10px;
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
+        margin-top: 15px;
+        border-radius: var(--border-radius);
+        border: 2px solid var(--primary-color);
         display: none;
+        box-shadow: var(--box-shadow);
     }
 
-    .page-header {
-        background: linear-gradient(135deg, var(--orange-primary) 0%, var(--orange-secondary) 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 30px;
+    .text-muted {
+        color: #6c757d !important;
+        font-size: 13px;
+        margin-top: 5px;
+        display: block;
     }
 
-    .page-title {
-        font-size: 32px;
-        font-weight: 700;
-        margin: 0;
+    /* Enhanced Form Styling */
+    .mb-4 {
+        margin-bottom: 1.5rem;
     }
 
-    .page-subtitle {
-        font-size: 16px;
-        opacity: 0.9;
-        margin: 5px 0 0 0;
+    .row {
+        margin: 0 -15px;
     }
 
-    .nav-buttons {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
+    .col-md-6, .col-12 {
+        padding: 0 15px;
     }
 
-    .nav-btn {
-        background: white;
-        color: var(--orange-primary);
-        padding: 10px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border: 2px solid var(--orange-primary);
+    /* Loading Animation */
+    .btn-loading {
+        position: relative;
+        pointer-events: none;
     }
 
-    .nav-btn:hover, .nav-btn.active {
-        background: var(--orange-primary);
-        color: white;
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        margin: auto;
+        border: 2px solid transparent;
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
     }
 
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
         .form-container {
             margin: 10px;
@@ -311,7 +414,41 @@ include 'include/admin_header.php';
         }
 
         .nav-buttons {
-            flex-direction: column;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+
+        .current-image {
+            width: 120px;
+            height: 120px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .form-container {
+            padding: 20px 15px;
+        }
+
+        .form-control, .form-select {
+            padding: 12px 15px;
+            font-size: 14px;
+        }
+
+        .form-control.with-icon, .form-select.with-icon {
+            padding-left: 40px;
+        }
+
+        .input-icon {
+            left: 12px;
+            font-size: 14px;
         }
     }
 </style>
@@ -327,27 +464,27 @@ include 'include/admin_header.php';
 <div class="container-fluid">
     <!-- Navigation Buttons -->
     <div class="nav-buttons">
-        <a href="index.php" class="nav-btn">
+        <a href="index.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-home"></i> Dashboard
         </a>
-        <a href="data_barang.php" class="nav-btn">
+        <a href="data_barang.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-box"></i> Data Barang
         </a>
-        <a href="kategori.php" class="nav-btn">
+        <a href="kategori.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-tags"></i> Kategori
         </a>
-        <a href="pesanan.php" class="nav-btn">
+        <a href="pesanan.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-shopping-cart"></i> Pesanan
         </a>
-        <a href="user.php" class="nav-btn">
+        <a href="user.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-users"></i> User
         </a>
-        <a href="history_admin.php" class="nav-btn">
+        <a href="history_admin.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-history"></i> History
         </a>
     </div>
 
-    <div class="form-container">
+    <div class="form-container content-animate">
         <div class="form-header">
             <?php if (!empty($barang['gambar']) && file_exists($barang['gambar'])): ?>
                 <img src="<?php echo htmlspecialchars($barang['gambar']); ?>" alt="Current Image" class="current-image">
@@ -376,7 +513,7 @@ include 'include/admin_header.php';
         <form method="POST" enctype="multipart/form-data" id="editForm">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="nama" class="form-label">
                             <i class="fas fa-tag"></i> Nama Barang
                         </label>
@@ -387,7 +524,7 @@ include 'include/admin_header.php';
                         </div>
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="harga" class="form-label">
                             <i class="fas fa-money-bill"></i> Harga
                         </label>
@@ -398,7 +535,7 @@ include 'include/admin_header.php';
                         </div>
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="stok" class="form-label">
                             <i class="fas fa-boxes"></i> Stok
                         </label>
@@ -411,7 +548,7 @@ include 'include/admin_header.php';
                 </div>
                 
                 <div class="col-md-6">
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="kategori_id" class="form-label">
                             <i class="fas fa-list"></i> Kategori
                         </label>
@@ -436,7 +573,7 @@ include 'include/admin_header.php';
                         </div>
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="gambar" class="form-label">
                             <i class="fas fa-image"></i> Gambar Produk
                         </label>
@@ -450,7 +587,7 @@ include 'include/admin_header.php';
                 </div>
                 
                 <div class="col-12">
-                    <div class="mb-4">
+                    <div class="mb-4 animate-item">
                         <label for="deskripsi" class="form-label">
                             <i class="fas fa-align-left"></i> Deskripsi
                         </label>
@@ -463,7 +600,7 @@ include 'include/admin_header.php';
                 <i class="fas fa-save"></i> Simpan Perubahan
             </button>
             
-            <a href="data_barang.php" class="btn btn-secondary">
+            <a href="data_barang.php" class="btn btn-secondary" onclick="showLoading()">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </form>
@@ -526,11 +663,15 @@ include 'include/admin_header.php';
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
         submitBtn.disabled = true;
+        
+        // Show page loading
+        showLoading();
     });
 
     // Auto redirect after success
     <?php if (isset($success_message)): ?>
     setTimeout(function() {
+        showLoading();
         window.location.href = 'data_barang.php';
     }, 2000);
     <?php endif; ?>

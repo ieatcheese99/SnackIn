@@ -120,7 +120,7 @@ include 'include/admin_header.php';
             </a>
         </div>
 
-        <div class="content-container">
+        <div class="content-container content-animate">
             <!-- Alert Messages -->
             <?php if (isset($success_message)): ?>
                 <div class="alert alert-success">
@@ -145,7 +145,7 @@ include 'include/admin_header.php';
             <?php if ($result && mysqli_num_rows($result) > 0): ?>
                 <div class="category-grid">
                     <?php while ($category = mysqli_fetch_assoc($result)): ?>
-                        <div class="category-card">
+                        <div class="category-card animate-item">
                             <div class="category-header">
                                 <h3 class="category-name"><?php echo htmlspecialchars($category['nama']); ?></h3>
                                 <span class="product-count">

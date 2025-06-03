@@ -375,6 +375,11 @@ require_once 'include/admin_header.php';
         100% { left: 100%; }
     }
 
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
     .new-orders-alert h4 {
         margin-bottom: 15px;
         font-weight: 700;
@@ -457,19 +462,19 @@ require_once 'include/admin_header.php';
         <a href="index.php" class="nav-btn active">
             <i class="fas fa-home"></i> Dashboard
         </a>
-        <a href="data_barang.php" class="nav-btn">
+        <a href="data_barang.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-box"></i> Data Barang
         </a>
-        <a href="kategori.php" class="nav-btn">
+        <a href="kategori.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-tags"></i> Kategori
         </a>
-        <a href="pesanan.php" class="nav-btn">
+        <a href="pesanan.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-shopping-cart"></i> Pesanan
         </a>
-        <a href="user.php" class="nav-btn">
+        <a href="user.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-users"></i> User
         </a>
-        <a href="history_admin.php" class="nav-btn">
+        <a href="history_admin.php" class="nav-btn" onclick="showLoading()">
             <i class="fas fa-history"></i> History
         </a>
     </div>
@@ -504,7 +509,7 @@ require_once 'include/admin_header.php';
                     Total hari ini: <strong><?php echo $today_orders; ?> pesanan</strong> dengan pendapatan <strong>Rp <?php echo number_format($today_revenue, 0, ',', '.'); ?></strong>.
                 <?php endif; ?>
             </p>
-            <a href="pesanan.php" class="btn">
+            <a href="pesanan.php" class="btn" onclick="showLoading()">
                 <i class="fas fa-eye"></i> Lihat Pesanan
             </a>
         </div>
@@ -621,7 +626,7 @@ require_once 'include/admin_header.php';
                                 </td>
                                 <td><?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></td>
                                 <td>
-                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary">
+                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary" onclick="showLoading()">
                                         <i class="fas fa-eye"></i> Lihat
                                     </a>
                                 </td>

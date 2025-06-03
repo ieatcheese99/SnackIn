@@ -234,7 +234,7 @@ include 'include/admin_header.php';
         </a>
     </div>
 
-    <div class="content-container">
+    <div class="content-container content-animate">
         <!-- Statistics Cards -->
         <div class="stats-cards">
             <?php
@@ -242,15 +242,15 @@ include 'include/admin_header.php';
             $admin_count = mysqli_num_rows(mysqli_query($db, "SELECT * FROM user WHERE level = 'admin'"));
             $user_count = mysqli_num_rows(mysqli_query($db, "SELECT * FROM user WHERE level = 'user'"));
             ?>
-            <div class="stat-card">
+            <div class="stat-card animate-item">
                 <span class="stat-number"><?php echo $total_users; ?></span>
                 <div class="stat-label">Total Users</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card animate-item">
                 <span class="stat-number"><?php echo $admin_count; ?></span>
                 <div class="stat-label">Administrators</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card animate-item">
                 <span class="stat-number"><?php echo $user_count; ?></span>
                 <div class="stat-label">Regular Users</div>
             </div>
@@ -264,7 +264,7 @@ include 'include/admin_header.php';
         </div>
 
         <!-- Users Table -->
-        <div class="users-table">
+        <div class="users-table animate-item">
             <div class="table-responsive">
                 <table class="table">
                     <thead>

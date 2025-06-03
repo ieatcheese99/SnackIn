@@ -171,6 +171,35 @@ include 'include/admin_header.php';
             text-align: center;
         }
     }
+
+    /* Animation */
+    .content-animate {
+        animation: fadeInUp 0.7s ease-in-out;
+    }
+
+    .animate-item {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
 </style>
 
 <!-- Page Header -->
@@ -338,7 +367,7 @@ include 'include/admin_header.php';
         </div>
     <?php else: ?>
         <!-- List View -->
-        <div class="content-container">
+        <div class="content-container content-animate">
             <!-- History Statistics -->
             <div class="history-stats">
                 <?php
@@ -361,19 +390,19 @@ include 'include/admin_header.php';
                     }
                 }
                 ?>
-                <div class="stat-card">
+                <div class="stat-card animate-item">
                     <div class="stat-number"><?php echo $total_completed; ?></div>
                     <div class="stat-label">Total Pesanan Selesai</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card animate-item">
                     <div class="stat-number">Rp <?php echo number_format($total_revenue, 0, ',', '.'); ?></div>
                     <div class="stat-label">Total Pendapatan</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card animate-item">
                     <div class="stat-number"><?php echo $today_orders; ?></div>
                     <div class="stat-label">Pesanan Hari Ini</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card animate-item">
                     <div class="stat-number"><?php echo $this_month_orders; ?></div>
                     <div class="stat-label">Pesanan Bulan Ini</div>
                 </div>
