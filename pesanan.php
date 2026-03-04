@@ -12,7 +12,7 @@ require "config/database.php";
 $view_order = null;
 $order_items = null;
 if (isset($_GET['view']) && $_GET['view'] > 0) {
-    $view_id = (int)$_GET['view'];
+    $view_id = (int) $_GET['view'];
     $view_query = "SELECT o.* FROM orders o WHERE o.id = ?";
     $stmt = mysqli_prepare($db, $view_query);
     mysqli_stmt_bind_param($stmt, 'i', $view_id);
@@ -33,19 +33,19 @@ if (isset($_GET['view']) && $_GET['view'] > 0) {
 
 // Handle status update
 if (isset($_POST['update_status']) && isset($_POST['order_id'])) {
-    $order_id = (int)$_POST['order_id'];
+    $order_id = (int) $_POST['order_id'];
     $new_status = $_POST['status'];
-    
+
     // Validate status
     $allowed_statuses = ['pending', 'processing', 'completed', 'cancelled'];
     if (in_array($new_status, $allowed_statuses)) {
         $update_query = "UPDATE orders SET status = ? WHERE id = ?";
         $stmt = mysqli_prepare($db, $update_query);
         mysqli_stmt_bind_param($stmt, 'si', $new_status, $order_id);
-        
+
         if (mysqli_stmt_execute($stmt)) {
             $success_message = "Status pesanan berhasil diupdate!";
-            
+
             // Refresh the view_order data if we're viewing this order
             if ($view_order && $view_order['id'] == $order_id) {
                 $view_order['status'] = $new_status;
@@ -69,50 +69,107 @@ include 'include/admin_header.php';
 ?>
 
 <style>
+    /* Global Variables */
+    :root {
+        --primary-color: #00227c;
+        --secondary-color: #001a5e;
+        --accent-color: #f48c06;
+        --white: #ffffff;
+        --orange: #f69e22;
+        --light-bg: #f8fafc;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
+    }
+
     .orders-stats {
-        display: flex;
-        gap: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 25px;
         margin-bottom: 30px;
-        flex-wrap: wrap;
-        justify-content: center;
     }
 
     .stat-item {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 25px;
         text-align: center;
-        padding: 15px 20px;
-        background: #f8f9fa;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        border-left: 4px solid #00227c;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: var(--primary-color);
+        opacity: 0.05;
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+        transition: var(--transition);
+    }
+
+    .stat-item:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-item:hover::before {
+        transform: translate(20px, -20px) scale(1.1);
+        opacity: 0.08;
     }
 
     .stat-number {
-        font-size: 24px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 36px;
         font-weight: 800;
-        color: #00227c;
+        color: var(--text-dark);
         display: block;
+        margin-bottom: 5px;
+        line-height: 1.1;
+        letter-spacing: -1px;
     }
 
     .stat-label {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
+        color: var(--text-muted);
+        font-size: 14px;
         text-transform: uppercase;
+        font-weight: 600;
         letter-spacing: 0.5px;
     }
 
     .detail-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
         overflow: hidden;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .detail-header {
-        background: #00227c;
-        color: white;
-        padding: 20px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: var(--white);
+        padding: 25px 30px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -123,20 +180,22 @@ include 'include/admin_header.php';
     }
 
     .info-section {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-left: 4px solid #00227c;
+        background: var(--light-bg);
+        border-radius: var(--radius-md);
+        padding: 25px;
+        margin-bottom: 25px;
+        border-left: 4px solid var(--primary-color);
     }
 
     .info-title {
-        font-weight: 600;
-        color: #333;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--text-dark);
         margin-bottom: 15px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
 
     .info-table {
@@ -146,22 +205,23 @@ include 'include/admin_header.php';
 
     .info-table th {
         text-align: left;
-        padding: 8px 0;
+        padding: 10px 0;
         font-weight: 600;
-        color: #555;
+        color: var(--text-muted);
         width: 40%;
     }
 
     .info-table td {
-        padding: 8px 0;
-        color: #333;
+        padding: 10px 0;
+        color: var(--text-dark);
     }
 
     .status-update-form {
-        background: #fff3cd;
-        border-radius: 8px;
-        padding: 20px;
+        background: #fffbeb;
+        border-radius: var(--radius-md);
+        padding: 25px;
         border-left: 4px solid #f59e0b;
+        box-shadow: var(--shadow-sm);
     }
 
     .items-table {
@@ -171,51 +231,48 @@ include 'include/admin_header.php';
     }
 
     .items-table th {
-        background: #f8f9fa;
-        padding: 12px;
+        background: var(--light-bg);
+        padding: 15px;
         text-align: left;
         font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
+        color: var(--text-muted);
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
     }
 
     .items-table td {
-        padding: 12px;
-        border-bottom: 1px solid #dee2e6;
+        padding: 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        vertical-align: middle;
     }
 
     .total-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 20px;
+        background: var(--light-bg);
+        padding: 25px;
+        border-radius: var(--radius-md);
+        margin-top: 30px;
         text-align: right;
     }
 
+    .total-section div {
+        margin-bottom: 10px;
+        color: var(--text-muted);
+    }
+
     .total-amount {
-        font-size: 24px;
-        font-weight: 700;
-        color: #00227c;
+        font-family: 'Outfit', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-top: 15px !important;
+        padding-top: 15px;
+        border-top: 2px solid rgba(0, 0, 0, 0.05);
     }
-
-    .badge {
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .bg-primary { background-color: #007bff; color: white; }
-    .bg-success { background-color: #28a745; color: white; }
-    .bg-warning { background-color: #ffc107; color: black; }
-    .bg-danger { background-color: #dc3545; color: white; }
-    .bg-info { background-color: #17a2b8; color: white; }
 
     @media (max-width: 768px) {
         .orders-stats {
-            flex-direction: column;
-            gap: 15px;
+            grid-template-columns: repeat(2, 1fr);
         }
-        
+
         .detail-header {
             flex-direction: column;
             gap: 15px;
@@ -228,7 +285,7 @@ include 'include/admin_header.php';
 <div class="page-header">
     <div class="container">
         <h1 class="page-title">
-            <i class="fas fa-clipboard-list"></i> 
+            <i class="fas fa-clipboard-list"></i>
             <?php echo $view_order ? "Detail Pesanan #" . $view_order['id'] : "Manajemen Pesanan"; ?>
         </h1>
         <p class="page-subtitle">
@@ -303,9 +360,12 @@ include 'include/admin_header.php';
                                         <?php
                                         $method = $view_order['metode_pembayaran'];
                                         $badge_class = 'bg-primary';
-                                        if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false) $badge_class = 'bg-warning';
-                                        if (strpos(strtolower($method), 'transfer') !== false) $badge_class = 'bg-info';
-                                        if (strpos(strtolower($method), 'qris') !== false) $badge_class = 'bg-success';
+                                        if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false)
+                                            $badge_class = 'bg-warning';
+                                        if (strpos(strtolower($method), 'transfer') !== false)
+                                            $badge_class = 'bg-info';
+                                        if (strpos(strtolower($method), 'qris') !== false)
+                                            $badge_class = 'bg-success';
                                         ?>
                                         <span class="badge <?php echo $badge_class; ?>">
                                             <?php echo htmlspecialchars($method); ?>
@@ -318,9 +378,12 @@ include 'include/admin_header.php';
                                         <?php
                                         $status = $view_order['status'] ?? 'pending';
                                         $status_class = 'bg-info';
-                                        if ($status == 'completed') $status_class = 'bg-success';
-                                        if ($status == 'cancelled') $status_class = 'bg-danger';
-                                        if ($status == 'processing') $status_class = 'bg-warning';
+                                        if ($status == 'completed')
+                                            $status_class = 'bg-success';
+                                        if ($status == 'cancelled')
+                                            $status_class = 'bg-danger';
+                                        if ($status == 'processing')
+                                            $status_class = 'bg-warning';
                                         ?>
                                         <span class="badge <?php echo $status_class; ?>">
                                             <?php echo ucfirst($status); ?>
@@ -329,7 +392,9 @@ include 'include/admin_header.php';
                                 </tr>
                                 <tr>
                                     <th>Total</th>
-                                    <td><strong style="color: #00227c;">Rp <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong></td>
+                                    <td><strong style="color: #00227c;">Rp
+                                            <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -417,7 +482,8 @@ include 'include/admin_header.php';
                     <div>Subtotal: Rp <?php echo number_format($view_order['total_harga'], 0, ',', '.'); ?></div>
                     <div>Biaya Admin: Rp <?php echo number_format($view_order['biaya_admin'] ?? 0, 0, ',', '.'); ?></div>
                     <div class="total-amount">
-                        Total Pesanan: Rp <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?>
+                        Total Pesanan: Rp
+                        <?php echo number_format($view_order['total_harga'] + ($view_order['biaya_admin'] ?? 0), 0, ',', '.'); ?>
                     </div>
                 </div>
 
@@ -464,71 +530,128 @@ include 'include/admin_header.php';
                 </div>
             </div>
 
-            <div class="table-container">
-                <table class="enhanced-table">
-                    <thead>
+            <div class="table-container"
+                style="background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 30px; border: 1px solid rgba(0,0,0,0.05);">
+                <table class="enhanced-table table table-hover"
+                    style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; color: var(--text-dark);">
+                    <thead
+                        style="background: var(--light-bg); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">
                         <tr>
-                            <th>ID</th>
-                            <th>Pelanggan</th>
-                            <th>Alamat</th>
-                            <th>Metode Pembayaran</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Tanggal</th>
-                            <th>Aksi</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                ID</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Pelanggan</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Alamat</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Pembayaran</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Status</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Total</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Tanggal</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: center; font-weight: 700; color: var(--text-muted);">
+                                Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
-                        if (mysqli_num_rows($orders_result) > 0): 
-                        ?>
+                        <?php
+                        if (mysqli_num_rows($orders_result) > 0):
+                            ?>
                             <?php while ($order = mysqli_fetch_assoc($orders_result)): ?>
-                            <tr>
-                                <td><strong>#<?php echo $order['id']; ?></strong></td>
-                                <td>
-                                    <?php echo htmlspecialchars($order['nama']); ?><br>
-                                    <small class="text-muted"><?php echo htmlspecialchars($order['username'] ?? 'N/A'); ?></small>
-                                </td>
-                                <td><?php echo htmlspecialchars(substr($order['alamat'], 0, 30)) . (strlen($order['alamat']) > 30 ? '...' : ''); ?></td>
-                                <td>
-                                    <?php
-                                    $method = $order['metode_pembayaran'];
-                                    $badge_class = 'bg-primary';
-                                    if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false) $badge_class = 'bg-warning';
-                                    if (strpos(strtolower($method), 'transfer') !== false) $badge_class = 'bg-info';
-                                    if (strpos(strtolower($method), 'qris') !== false) $badge_class = 'bg-success';
-                                    ?>
-                                    <span class="badge <?php echo $badge_class; ?>">
-                                        <?php echo htmlspecialchars($method); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php
-                                    $status = $order['status'] ?? 'pending';
-                                    $status_class = 'bg-info';
-                                    if ($status == 'completed') $status_class = 'bg-success';
-                                    if ($status == 'cancelled') $status_class = 'bg-danger';
-                                    if ($status == 'processing') $status_class = 'bg-warning';
-                                    ?>
-                                    <span class="badge <?php echo $status_class; ?>">
-                                        <?php echo ucfirst($status); ?>
-                                    </span>
-                                </td>
-                                <td><strong style="color: #00227c;">Rp <?php echo number_format($order['total_harga'] + ($order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong></td>
-                                <td><?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?></td>
-                                <td>
-                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); transition: var(--transition-fast);">
+                                    <td style="padding: 1rem;"><strong
+                                            style="color: var(--primary-color);">#<?php echo $order['id']; ?></strong></td>
+                                    <td style="padding: 1rem; font-weight: 500;">
+                                        <?php echo htmlspecialchars($order['nama']); ?><br>
+                                        <small
+                                            style="color: var(--text-muted); font-size: 0.85rem;"><?php echo htmlspecialchars($order['username'] ?? 'N/A'); ?></small>
+                                    </td>
+                                    <td style="padding: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                                        <?php echo htmlspecialchars(substr($order['alamat'], 0, 30)) . (strlen($order['alamat']) > 30 ? '...' : ''); ?>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <?php
+                                        $method = $order['metode_pembayaran'];
+
+                                        $bg_pay = '#e0e7ff';
+                                        $col_pay = '#4f46e5';
+                                        if (strpos(strtolower($method), 'cod') !== false || strpos(strtolower($method), 'cash') !== false) {
+                                            $bg_pay = '#fef3c7';
+                                            $col_pay = '#d97706';
+                                        }
+                                        if (strpos(strtolower($method), 'transfer') !== false) {
+                                            $bg_pay = '#e0f2fe';
+                                            $col_pay = '#0ea5e9';
+                                        }
+                                        if (strpos(strtolower($method), 'qris') !== false) {
+                                            $bg_pay = '#d1fae5';
+                                            $col_pay = '#059669';
+                                        }
+                                        ?>
+                                        <span
+                                            style="background: <?php echo $bg_pay; ?>; color: <?php echo $col_pay; ?>; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                            <?php echo htmlspecialchars($method); ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <?php
+                                        $status = $order['status'] ?? 'pending';
+                                        $bg_stat = '#e0f2fe';
+                                        $col_stat = '#0ea5e9'; // info
+                                        if ($status == 'completed') {
+                                            $bg_stat = '#d1fae5';
+                                            $col_stat = '#059669';
+                                        } // success
+                                        if ($status == 'cancelled') {
+                                            $bg_stat = '#fee2e2';
+                                            $col_stat = '#dc2626';
+                                        } // danger
+                                        if ($status == 'processing') {
+                                            $bg_stat = '#fef3c7';
+                                            $col_stat = '#d97706';
+                                        } // warning
+                                        ?>
+                                        <span
+                                            style="background: <?php echo $bg_stat; ?>; color: <?php echo $col_stat; ?>; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                            <?php echo ucfirst($status); ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem;"><strong style="font-family: 'Outfit', sans-serif;">Rp
+                                            <?php echo number_format($order['total_harga'] + ($order['biaya_admin'] ?? 0), 0, ',', '.'); ?></strong>
+                                    </td>
+                                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                        <?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: center;">
+                                        <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm"
+                                            style="display: inline-block; padding: 8px; background: var(--primary-color); color: white; border-radius: 8px; transition: var(--transition);">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center" style="padding: 60px;">
-                                    <i class="fas fa-inbox" style="font-size: 64px; color: #ccc; margin-bottom: 20px; display: block;"></i>
-                                    <h5 style="color: #666; margin: 0;">Belum ada pesanan</h5>
-                                    <p style="color: #999; margin: 5px 0 0 0;">Pesanan akan muncul di sini setelah pelanggan melakukan pembelian</p>
+                                <td colspan="8" class="text-center" style="padding: 60px 40px; text-align: center;">
+                                    <div
+                                        style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                                        <i class="fas fa-inbox" style="font-size: 32px; color: #94a3b8;"></i>
+                                    </div>
+                                    <h4
+                                        style="color: var(--text-dark); font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">
+                                        Belum ada pesanan</h4>
+                                    <p style="color: var(--text-muted); margin: 0;">Pesanan akan muncul di sini setelah
+                                        pelanggan melakukan pembelian.</p>
                                 </td>
                             </tr>
                         <?php endif; ?>

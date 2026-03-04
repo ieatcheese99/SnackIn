@@ -35,11 +35,20 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $result = mysqli_stmt_get_result($checkStmt);
 
     if (mysqli_num_rows($result) > 0) {
+        $user_data = mysqli_fetch_assoc($result);
+        if ($user_data['level'] === 'admin') {
+            echo "<script>
+                    alert('User dengan level admin tidak dapat dihapus!');
+                    document.location.href = 'user.php';
+                  </script>";
+            exit();
+        }
+
         // Hapus data dari database
         $query = "DELETE FROM user WHERE id = ?";
         $stmt = mysqli_prepare($db, $query);
         mysqli_stmt_bind_param($stmt, "i", $id);
-        
+
         if (mysqli_stmt_execute($stmt)) {
             echo "<script>
                     alert('User berhasil dihapus!');

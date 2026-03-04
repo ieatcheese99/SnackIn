@@ -13,19 +13,25 @@ $page_title = $page_title ?? 'Admin Panel';
 ?>
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#00227c">
     <title><?php echo htmlspecialchars($page_title); ?> - Snack In Admin</title>
-    
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/img/Logo Bisnis Bengkel Otomotif (3).png">
+
     <!-- CSS Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
             --primary-color: #00227c;
@@ -96,8 +102,13 @@ $page_title = $page_title ?? 'Admin Panel';
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Main Header */
@@ -371,12 +382,29 @@ $page_title = $page_title ?? 'Admin Panel';
             transition: var(--transition);
         }
 
-        .enhanced-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
-        .enhanced-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
-        .enhanced-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
-        .enhanced-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
-        .enhanced-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
-        .enhanced-table tbody tr:nth-child(n+6) { animation-delay: 0.6s; }
+        .enhanced-table tbody tr:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .enhanced-table tbody tr:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .enhanced-table tbody tr:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .enhanced-table tbody tr:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .enhanced-table tbody tr:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .enhanced-table tbody tr:nth-child(n+6) {
+            animation-delay: 0.6s;
+        }
 
         .enhanced-table tbody tr:hover {
             background-color: #f8f9ff;
@@ -390,6 +418,7 @@ $page_title = $page_title ?? 'Admin Panel';
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -456,11 +485,30 @@ $page_title = $page_title ?? 'Admin Panel';
             font-weight: 500;
         }
 
-        .bg-primary { background-color: var(--primary-color); color: white; }
-        .bg-success { background-color: var(--success-color); color: white; }
-        .bg-warning { background-color: var(--warning-color); color: black; }
-        .bg-danger { background-color: var(--danger-color); color: white; }
-        .bg-info { background-color: #17a2b8; color: white; }
+        .bg-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .bg-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .bg-warning {
+            background-color: var(--warning-color);
+            color: black;
+        }
+
+        .bg-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .bg-info {
+            background-color: #17a2b8;
+            color: white;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -506,7 +554,7 @@ $page_title = $page_title ?? 'Admin Panel';
     <header class="main-header">
         <div class="container">
             <a href="index.php" class="logo" onclick="showLoading()">
-                <<img src="assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
+                <img src="assets/img/Logo Bisnis Bengkel Otomotif (3).png" alt="Snack In Logo">
                 <span>SNACK IN ADMIN</span>
             </a>
             <div class="header-actions">
@@ -541,7 +589,7 @@ $page_title = $page_title ?? 'Admin Panel';
                 loadingScreen.classList.add('show');
             }
         }
-        
+
         function hideLoading() {
             const loadingScreen = document.getElementById('loadingScreen');
             if (loadingScreen) {
@@ -550,19 +598,19 @@ $page_title = $page_title ?? 'Admin Panel';
         }
 
         // Profile dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const profileTrigger = document.getElementById('profileTrigger');
             const profileDropdown = document.getElementById('profileDropdown');
 
             if (profileTrigger && profileDropdown) {
-                profileTrigger.addEventListener('click', function(e) {
+                profileTrigger.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     profileDropdown.classList.toggle('show');
                 });
 
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     if (!profileTrigger.contains(e.target) && !profileDropdown.contains(e.target)) {
                         profileDropdown.classList.remove('show');
                     }
@@ -574,7 +622,7 @@ $page_title = $page_title ?? 'Admin Panel';
 
             // Show loading on page navigation
             document.querySelectorAll('a:not([href^="#"]):not([href^="javascript:"]):not([target="_blank"])').forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', function (e) {
                     if (!this.closest('.dropdown-menu-custom') && this.href !== window.location.href) {
                         showLoading();
                     }
@@ -583,7 +631,7 @@ $page_title = $page_title ?? 'Admin Panel';
 
             // Show loading on form submission
             document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function(e) {
+                form.addEventListener('submit', function (e) {
                     if (this.checkValidity()) {
                         showLoading();
                     }
@@ -592,16 +640,17 @@ $page_title = $page_title ?? 'Admin Panel';
         });
 
         // Hide loading on window load
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             setTimeout(hideLoading, 300);
         });
 
         // Hide loading when page becomes visible
-        document.addEventListener('visibilitychange', function() {
+        document.addEventListener('visibilitychange', function () {
             if (!document.hidden) {
                 setTimeout(hideLoading, 200);
             }
         });
     </script>
 </body>
+
 </html>

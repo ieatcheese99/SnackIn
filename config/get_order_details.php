@@ -2,6 +2,7 @@
 session_start();
 require_once 'database.php';
 
+// Set content type to JSON
 header('Content-Type: application/json');
 
 // Check if user is logged in
@@ -10,48 +11,50 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
-if (!isset($_GET['order_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Order ID not provided']);
+// Get order ID from request
+$order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
+
+if ($order_id <= 0) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid order ID']);
     exit;
 }
 
-$orderId = (int)$_GET['order_id'];
-$username = $_SESSION['username'];
+try {
+    // Get order details
+    $orderQuery = "SELECT * FROM orders WHERE id = ? AND username = ?";
+    $stmt = mysqli_prepare($db, $orderQuery);
+    mysqli_stmt_bind_param($stmt, "is", $order_id, $_SESSION['username']);
+    mysqli_stmt_execute($stmt);
+    $orderResult = mysqli_stmt_get_result($stmt);
+    $order = mysqli_fetch_assoc($orderResult);
 
-// Get order details
-$orderQuery = "SELECT * FROM orders WHERE id = ? AND username = ?";
-$stmt = mysqli_prepare($db, $orderQuery);
-mysqli_stmt_bind_param($stmt, "is", $orderId, $username);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
+    if (!$order) {
+        echo json_encode(['status' => 'error', 'message' => 'Order not found']);
+        exit;
+    }
 
-if (mysqli_num_rows($result) == 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Order not found']);
-    exit;
+    // Get order items
+    $itemsQuery = "SELECT * FROM order_items WHERE order_id = ?";
+    $stmt = mysqli_prepare($db, $itemsQuery);
+    mysqli_stmt_bind_param($stmt, "i", $order_id);
+    mysqli_stmt_execute($stmt);
+    $itemsResult = mysqli_stmt_get_result($stmt);
+    
+    $items = [];
+    while ($item = mysqli_fetch_assoc($itemsResult)) {
+        $items[] = $item;
+    }
+
+    // Format order date
+    $order['order_date'] = date('d M Y, H:i', strtotime($order['created_at']));
+
+    echo json_encode([
+        'status' => 'success',
+        'order' => $order,
+        'items' => $items
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
 }
-
-$order = mysqli_fetch_assoc($result);
-
-// Get order items
-$itemsQuery = "SELECT oi.*, oi.nama_produk 
-               FROM order_items oi 
-               WHERE oi.order_id = ?";
-$stmt = mysqli_prepare($db, $itemsQuery);
-mysqli_stmt_bind_param($stmt, "i", $orderId);
-mysqli_stmt_execute($stmt);
-$itemsResult = mysqli_stmt_get_result($stmt);
-
-$items = [];
-while ($item = mysqli_fetch_assoc($itemsResult)) {
-    $items[] = $item;
-}
-
-// Format order date
-$order['order_date'] = date('d M Y, H:i', strtotime($order['created_at']));
-
-echo json_encode([
-    'status' => 'success',
-    'order' => $order,
-    'items' => $items
-]);
 ?>

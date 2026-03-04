@@ -599,8 +599,8 @@ $page_title = "Keranjang Belanja";
     <?php 
     // Set cart count for the header
     $cartCount = count($cart);
-    // Include the user header
-    include_once '../user_header.php'; 
+    // FIXED: Include from same directory since both files are in /include/
+    include_once 'user_header.php'; 
     ?>
 
     <!-- Success Popup -->

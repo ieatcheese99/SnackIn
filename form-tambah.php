@@ -8,7 +8,8 @@ require_once 'config/database.php';
 session_start();
 
 // Fungsi untuk memeriksa akses admin
-function requireAdmin() {
+function requireAdmin()
+{
     if (!isset($_SESSION['username']) || $_SESSION['level'] !== 'admin') {
         header("Location: login.php");
         exit();
@@ -18,7 +19,8 @@ function requireAdmin() {
 requireAdmin();
 
 // Fungsi untuk sanitize input
-function sanitize_input($data) {
+function sanitize_input($data)
+{
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
@@ -26,14 +28,15 @@ function sanitize_input($data) {
 }
 
 // Fungsi untuk menambahkan barang
-function create_barang($post, $file) {
+function create_barang($post, $file)
+{
     global $db;
 
     $Nama = sanitize_input($post['nama']);
     $Deskripsi = sanitize_input($post['deskripsi']);
-    $Stok = (int)$post['stok'];
-    $Harga = (int)$post['harga'];
-    $KategoriID = (int)$post['kategori_id'];
+    $Stok = (int) $post['stok'];
+    $Harga = (int) $post['harga'];
+    $KategoriID = (int) $post['kategori_id'];
 
     // Validasi kategori
     if (empty($KategoriID)) {
@@ -45,13 +48,13 @@ function create_barang($post, $file) {
         $gambar_name = $file['gambar']['name'];
         $gambar_tmp = $file['gambar']['tmp_name'];
         $gambar_extension = strtolower(pathinfo($gambar_name, PATHINFO_EXTENSION));
-        
+
         // Validasi ekstensi file
         $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
         if (!in_array($gambar_extension, $allowed_extensions)) {
             return false;
         }
-        
+
         // Generate unique filename
         $gambar_filename = time() . '_' . uniqid() . '.' . $gambar_extension;
         $gambar_path = 'uploads/' . $gambar_filename;
@@ -101,19 +104,39 @@ include 'include/admin_header.php';
 
 <style>
     :root {
-        --orange-primary: #ff9800;
-        --orange-secondary: #f57c00;
-        --orange-light: #ffb74d;
-        --orange-dark: #e65100;
+        --primary-color: #00227c;
+        --secondary-color: #001a5e;
+        --accent-color: #f48c06;
+        --white: #ffffff;
+        --orange: #f69e22;
+        --light-bg: #f8fafc;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
+        min-height: 100vh;
     }
 
     .form-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
         padding: 40px;
         margin: 20px auto;
         max-width: 800px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .form-header {
@@ -122,54 +145,63 @@ include 'include/admin_header.php';
     }
 
     .form-header h1 {
-        color: var(--orange-primary);
-        font-weight: 700;
+        font-family: 'Outfit', sans-serif;
+        color: var(--primary-color);
+        font-weight: 800;
         margin-bottom: 10px;
         font-size: 28px;
+        letter-spacing: -0.5px;
     }
 
     .form-header p {
-        color: #666;
+        color: var(--text-muted);
         margin: 0;
     }
 
-    .form-control, .form-select {
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
+    .form-control,
+    .form-select {
+        border-radius: var(--radius-md);
+        border: 2px solid #e2e8f0;
         padding: 15px 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        background: #f8f9fa;
+        font-size: 15px;
+        transition: var(--transition);
+        background: var(--light-bg);
+        color: var(--text-dark);
     }
 
-    .form-control:focus, .form-select:focus {
-        border-color: var(--orange-primary);
-        box-shadow: 0 0 0 4px rgba(255,152,0,0.1);
-        background: white;
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(0, 34, 124, 0.1);
+        background: var(--white);
     }
 
     .form-label {
-        font-weight: 600;
-        color: #333;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        color: var(--text-dark);
         margin-bottom: 8px;
         font-size: 14px;
     }
 
     .btn-primary {
-        background: var(--orange-primary);
+        background: var(--primary-color);
         border: none;
         padding: 15px 30px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: all 0.3s ease;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 15px;
+        transition: var(--transition);
         width: 100%;
+        color: var(--white);
+        box-shadow: 0 4px 10px rgba(0, 34, 124, 0.2);
     }
 
     .btn-primary:hover {
-        background: var(--orange-secondary);
+        background: var(--secondary-color);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(255,152,0,0.3);
+        box-shadow: 0 6px 15px rgba(0, 34, 124, 0.3);
+        color: var(--white);
     }
 
     .btn-secondary {
@@ -239,16 +271,19 @@ include 'include/admin_header.php';
     }
 
     .page-header {
-        background: linear-gradient(135deg, var(--orange-primary) 0%, var(--orange-secondary) 100%);
-        color: white;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: var(--white);
         padding: 40px 0;
         margin-bottom: 30px;
+        box-shadow: var(--shadow-md);
     }
 
     .page-title {
-        font-size: 32px;
-        font-weight: 700;
+        font-family: 'Outfit', sans-serif;
+        font-size: 36px;
+        font-weight: 800;
         margin: 0;
+        letter-spacing: -1px;
     }
 
     .page-subtitle {
@@ -262,22 +297,34 @@ include 'include/admin_header.php';
         gap: 10px;
         margin-bottom: 30px;
         flex-wrap: wrap;
+        justify-content: center;
     }
 
     .nav-btn {
-        background: white;
-        color: var(--orange-primary);
-        padding: 10px 20px;
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--primary-color);
+        padding: 12px 20px;
+        border-radius: 25px;
         text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border: 2px solid var(--orange-primary);
+        font-weight: 600;
+        transition: var(--transition);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .nav-btn:hover, .nav-btn.active {
-        background: var(--orange-primary);
-        color: white;
+    .nav-btn:hover {
+        background: var(--white);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        color: var(--primary-color);
+    }
+
+    .nav-btn.active {
+        background: var(--primary-color);
+        color: var(--white);
     }
 
     @media (max-width: 768px) {
@@ -285,7 +332,7 @@ include 'include/admin_header.php';
             margin: 10px;
             padding: 30px 20px;
         }
-        
+
         .form-header h1 {
             font-size: 24px;
         }
@@ -355,34 +402,34 @@ include 'include/admin_header.php';
                         </label>
                         <div class="input-group">
                             <i class="fas fa-tag input-icon"></i>
-                            <input type="text" class="form-control with-icon" name="nama" id="nama" 
-                                   placeholder="Masukkan nama barang" required>
+                            <input type="text" class="form-control with-icon" name="nama" id="nama"
+                                placeholder="Masukkan nama barang" required>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="harga" class="form-label">
                             <i class="fas fa-money-bill"></i> Harga
                         </label>
                         <div class="input-group">
                             <i class="fas fa-money-bill input-icon"></i>
-                            <input type="number" class="form-control with-icon" name="harga" id="harga" 
-                                   placeholder="Masukkan harga" min="1" required>
+                            <input type="number" class="form-control with-icon" name="harga" id="harga"
+                                placeholder="Masukkan harga" min="1" required>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="stok" class="form-label">
                             <i class="fas fa-boxes"></i> Stok
                         </label>
                         <div class="input-group">
                             <i class="fas fa-boxes input-icon"></i>
-                            <input type="number" class="form-control with-icon" name="stok" id="stok" 
-                                   placeholder="Masukkan jumlah stok" min="0" required>
+                            <input type="number" class="form-control with-icon" name="stok" id="stok"
+                                placeholder="Masukkan jumlah stok" min="0" required>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="mb-4">
                         <label for="kategori_id" class="form-label">
@@ -396,45 +443,46 @@ include 'include/admin_header.php';
                                 $categories = mysqli_query($db, "SELECT * FROM kategori ORDER BY nama");
                                 if ($categories) {
                                     while ($category = mysqli_fetch_assoc($categories)):
-                                ?>
-                                    <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['nama']); ?></option>
-                                <?php 
-                                    endwhile; 
+                                        ?>
+                                        <option value="<?php echo $category['id']; ?>">
+                                            <?php echo htmlspecialchars($category['nama']); ?></option>
+                                    <?php
+                                    endwhile;
                                 }
                                 ?>
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label for="gambar" class="form-label">
                             <i class="fas fa-image"></i> Gambar Produk
                         </label>
                         <div class="input-group">
                             <i class="fas fa-image input-icon"></i>
-                            <input type="file" class="form-control with-icon" name="gambar" id="gambar" 
-                                   accept="image/*" required>
+                            <input type="file" class="form-control with-icon" name="gambar" id="gambar" accept="image/*"
+                                required>
                         </div>
                         <small class="text-muted">Format: JPG, JPEG, PNG, GIF. Maksimal 5MB</small>
                         <img id="image-preview" alt="Preview">
                     </div>
                 </div>
-                
+
                 <div class="col-12">
                     <div class="mb-4">
                         <label for="deskripsi" class="form-label">
                             <i class="fas fa-align-left"></i> Deskripsi
                         </label>
-                        <textarea class="form-control" name="deskripsi" id="deskripsi" rows="4" 
-                                  placeholder="Masukkan deskripsi produk" required></textarea>
+                        <textarea class="form-control" name="deskripsi" id="deskripsi" rows="4"
+                            placeholder="Masukkan deskripsi produk" required></textarea>
                     </div>
                 </div>
             </div>
-            
+
             <button type="submit" name="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Simpan Barang
             </button>
-            
+
             <a href="data_barang.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
@@ -444,10 +492,10 @@ include 'include/admin_header.php';
 
 <script>
     // Preview image before upload
-    document.getElementById('gambar').addEventListener('change', function(e) {
+    document.getElementById('gambar').addEventListener('change', function (e) {
         const file = e.target.files[0];
         const preview = document.getElementById('image-preview');
-        
+
         if (file) {
             // Check file size (5MB limit)
             if (file.size > 5 * 1024 * 1024) {
@@ -456,9 +504,9 @@ include 'include/admin_header.php';
                 preview.style.display = 'none';
                 return;
             }
-            
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 preview.src = e.target.result;
                 preview.style.display = 'block';
             };
@@ -469,32 +517,32 @@ include 'include/admin_header.php';
     });
 
     // Form validation
-    document.getElementById('productForm').addEventListener('submit', function(e) {
+    document.getElementById('productForm').addEventListener('submit', function (e) {
         const nama = document.getElementById('nama').value.trim();
         const harga = document.getElementById('harga').value;
         const stok = document.getElementById('stok').value;
         const kategori = document.getElementById('kategori_id').value;
         const gambar = document.getElementById('gambar').files[0];
         const deskripsi = document.getElementById('deskripsi').value.trim();
-        
+
         if (!nama || !harga || !stok || !kategori || !gambar || !deskripsi) {
             e.preventDefault();
             alert('Semua field harus diisi!');
             return false;
         }
-        
+
         if (harga <= 0) {
             e.preventDefault();
             alert('Harga harus lebih dari 0!');
             return false;
         }
-        
+
         if (stok < 0) {
             e.preventDefault();
             alert('Stok tidak boleh negatif!');
             return false;
         }
-        
+
         // Show loading
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
@@ -503,9 +551,9 @@ include 'include/admin_header.php';
 
     // Auto redirect after success
     <?php if (isset($success_message)): ?>
-    setTimeout(function() {
-        window.location.href = 'data_barang.php';
-    }, 2000);
+        setTimeout(function () {
+            window.location.href = 'data_barang.php';
+        }, 2000);
     <?php endif; ?>
 </script>
 

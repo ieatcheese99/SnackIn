@@ -7,7 +7,8 @@ require_once 'config/database.php';
 session_start();
 
 // Fungsi sanitasi input
-function sanitize_input($data) {
+function sanitize_input($data)
+{
     global $db;
     $data = trim($data);
     $data = stripslashes($data);
@@ -16,7 +17,8 @@ function sanitize_input($data) {
 }
 
 // Fungsi untuk memeriksa akses admin
-function requireAdmin() {
+function requireAdmin()
+{
     if (!isset($_SESSION['username']) || $_SESSION['level'] !== 'admin') {
         header("Location: login.php");
         exit();
@@ -24,7 +26,8 @@ function requireAdmin() {
 }
 
 // Fungsi untuk mencatat aktivitas admin
-function logAdminAction($action, $details) {
+function logAdminAction($action, $details)
+{
     global $db;
     $username = $_SESSION['username'];
     $query = "INSERT INTO admin_logs (username, action, details, created_at) VALUES (?, ?, ?, NOW())";
@@ -39,7 +42,7 @@ function logAdminAction($action, $details) {
 requireAdmin();
 
 // Get user ID from URL
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $query = "SELECT * FROM user WHERE id = ?";
 $stmt = mysqli_prepare($db, $query);
 mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -56,7 +59,7 @@ if (!$user) {
 if (isset($_POST['submit'])) {
     $username = sanitize_input($_POST['username']);
     $level = sanitize_input($_POST['level']);
-    
+
     // Check if username already exists (excluding current user)
     $check_query = "SELECT COUNT(*) as count FROM user WHERE username = ? AND id != ?";
     $check_stmt = mysqli_prepare($db, $check_query);
@@ -64,7 +67,7 @@ if (isset($_POST['submit'])) {
     mysqli_stmt_execute($check_stmt);
     $check_result = mysqli_stmt_get_result($check_stmt);
     $check_data = mysqli_fetch_assoc($check_result);
-    
+
     if ($check_data['count'] > 0) {
         $error_message = "Username sudah digunakan!";
     } else {
@@ -78,7 +81,7 @@ if (isset($_POST['submit'])) {
             $stmt = mysqli_prepare($db, $query);
             mysqli_stmt_bind_param($stmt, 'ssi', $username, $level, $id);
         }
-        
+
         if (mysqli_stmt_execute($stmt)) {
             $success_message = "User berhasil diperbarui!";
             logAdminAction("Edit User", "ID: $id, Username: $username, Level: $level");
@@ -96,28 +99,34 @@ $page_title = "Edit User";
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Snack In Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
             --primary-color: #00227c;
-            --secondary-color: #1e40af;
+            --secondary-color: #001a5e;
             --accent-color: #f48c06;
+            --white: #ffffff;
+            --orange: #f69e22;
+            --light-bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --dark-blue: #00227c;
-            --white: #ffffff;
-            --light-gray: #f8f9fa;
-            --border-radius: 12px;
-            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
         }
 
         * {
@@ -127,10 +136,10 @@ $page_title = "Edit User";
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f97316, #ea580c);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-bg);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-dark);
             line-height: 1.6;
             display: flex;
             align-items: center;
@@ -138,13 +147,14 @@ $page_title = "Edit User";
         }
 
         .form-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
             padding: 40px;
             width: 100%;
             max-width: 500px;
             margin: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             animation: fadeIn 0.5s ease;
         }
 
@@ -154,14 +164,16 @@ $page_title = "Edit User";
         }
 
         .form-title {
+            font-family: 'Outfit', sans-serif;
             color: var(--primary-color);
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 10px;
             font-size: 28px;
+            letter-spacing: -0.5px;
         }
 
         .form-subtitle {
-            color: #666;
+            color: var(--text-muted);
             margin: 0;
         }
 
@@ -170,8 +182,9 @@ $page_title = "Edit User";
         }
 
         .form-label {
-            font-weight: 600;
-            color: #333;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
             margin-bottom: 8px;
             font-size: 14px;
             display: flex;
@@ -179,19 +192,22 @@ $page_title = "Edit User";
             gap: 8px;
         }
 
-        .form-control, .form-select {
-            border-radius: 12px;
-            border: 2px solid #e9ecef;
+        .form-control,
+        .form-select {
+            border-radius: var(--radius-md);
+            border: 2px solid #e2e8f0;
             padding: 15px 20px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
+            font-size: 15px;
+            transition: var(--transition);
+            background: var(--light-bg);
+            color: var(--text-dark);
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 4px rgba(0, 34, 124, 0.1);
-            background: white;
+            background: var(--white);
         }
 
         .input-group {
@@ -203,7 +219,7 @@ $page_title = "Edit User";
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #666;
+            color: var(--primary-color);
             z-index: 10;
         }
 
@@ -222,53 +238,62 @@ $page_title = "Edit User";
         }
 
         .btn {
-            padding: 12px 25px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-size: 16px;
+            padding: 15px 30px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            transition: var(--transition);
+            font-size: 15px;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-primary {
             background: var(--primary-color);
             border: none;
-            color: white;
+            color: var(--white);
+            box-shadow: 0 4px 10px rgba(0, 34, 124, 0.2);
         }
 
         .btn-primary:hover {
             background: var(--secondary-color);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 34, 124, 0.3);
+            box-shadow: 0 6px 15px rgba(0, 34, 124, 0.3);
+            color: var(--white);
         }
 
         .btn-secondary {
-            background: #6c757d;
+            background: #f1f5f9;
+            color: var(--text-dark);
             border: none;
-            color: white;
+            text-decoration: none;
+            margin-top: 10px;
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
+            background: #e2e8f0;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+            color: var(--text-dark);
         }
 
         .alert {
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             border: none;
             padding: 15px 20px;
             margin-bottom: 25px;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .alert-success {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
+            background: #d1fae5;
+            color: #059669;
         }
 
         .alert-danger {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
+            background: #fee2e2;
+            color: #dc2626;
         }
 
         .user-avatar {
@@ -312,7 +337,7 @@ $page_title = "Edit User";
             text-align: center;
         }
 
-        .spinner > div {
+        .spinner>div {
             width: 18px;
             height: 18px;
             background-color: #f97316;
@@ -331,9 +356,14 @@ $page_title = "Edit User";
         }
 
         @keyframes sk-bouncedelay {
-            0%, 80%, 100% { 
+
+            0%,
+            80%,
+            100% {
                 transform: scale(0);
-            } 40% { 
+            }
+
+            40% {
                 transform: scale(1.0);
             }
         }
@@ -344,6 +374,7 @@ $page_title = "Edit User";
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -355,7 +386,7 @@ $page_title = "Edit User";
                 margin: 10px;
                 padding: 30px 20px;
             }
-            
+
             .form-title {
                 font-size: 24px;
             }
@@ -402,26 +433,28 @@ $page_title = "Edit User";
                 </label>
                 <div class="input-group">
                     <i class="fas fa-user input-icon"></i>
-                    <input type="text" class="form-control with-icon" name="username" id="username" 
-                           placeholder="Username" value="<?php echo htmlspecialchars($user['username']); ?>" required minlength="3">
+                    <input type="text" class="form-control with-icon" name="username" id="username"
+                        placeholder="Username" value="<?php echo htmlspecialchars($user['username']); ?>" required
+                        minlength="3">
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label for="password" class="form-label">
                     <i class="fas fa-lock"></i> Password
                 </label>
                 <div class="input-group">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" class="form-control with-icon" name="password" id="password" 
-                           placeholder="Kosongkan jika tidak ingin diubah" minlength="6">
+                    <input type="password" class="form-control with-icon" name="password" id="password"
+                        placeholder="Kosongkan jika tidak ingin diubah" minlength="6">
                     <i class="fas fa-eye password-toggle" onclick="togglePassword('password')"></i>
                 </div>
-                <div style="margin-top: 8px; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">
+                <div
+                    style="margin-top: 8px; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">
                     <i class="fas fa-info-circle"></i> Kosongkan jika tidak ingin mengubah password
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label for="level" class="form-label">
                     <i class="fas fa-shield-alt"></i> Level
@@ -434,12 +467,12 @@ $page_title = "Edit User";
                     </select>
                 </div>
             </div>
-            
+
             <div style="margin-top: 32px;">
                 <button type="submit" name="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
                     <i class="fas fa-save"></i> Simpan Perubahan
                 </button>
-                
+
                 <a href="user.php" class="btn btn-secondary" style="width: 100%;">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
@@ -453,7 +486,7 @@ $page_title = "Edit User";
         function showLoading() {
             document.getElementById('loadingScreen').classList.add('show');
         }
-        
+
         // Hide loading screen
         function hideLoading() {
             document.getElementById('loadingScreen').classList.remove('show');
@@ -463,7 +496,7 @@ $page_title = "Edit User";
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = input.nextElementSibling;
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -476,52 +509,53 @@ $page_title = "Edit User";
         }
 
         // Form validation
-        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+        document.getElementById('editUserForm').addEventListener('submit', function (e) {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const level = document.getElementById('level').value;
-            
+
             if (!username || !level) {
                 e.preventDefault();
                 alert('Username dan level harus diisi!');
                 return false;
             }
-            
+
             if (password && password.length < 6) {
                 e.preventDefault();
                 alert('Password minimal 6 karakter!');
                 return false;
             }
-            
+
             if (username.length < 3) {
                 e.preventDefault();
                 alert('Username minimal 3 karakter!');
                 return false;
             }
-            
+
             // Show loading when form is submitted
             showLoading();
         });
 
         // Auto redirect after success
         <?php if (isset($success_message)): ?>
-        setTimeout(function() {
-            showLoading();
-            window.location.href = 'user.php';
-        }, 2000);
+            setTimeout(function () {
+                showLoading();
+                window.location.href = 'user.php';
+            }, 2000);
         <?php endif; ?>
 
         // Page transition animation
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             hideLoading();
         });
 
         // Show loading on page navigation
         document.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function () {
                 showLoading();
             });
         });
     </script>
 </body>
+
 </html>

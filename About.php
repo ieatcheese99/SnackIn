@@ -10,14 +10,31 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Us - Snack In</title>
+    <!-- Google Fonts: Inter and Outfit -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Reset and Base Styles */
         :root {
             --primary-color: #00227c;
-            --secondary-color: #00227c;
+            --secondary-color: #001a5e;
             --accent-color: #f48c06;
             --dark-blue: #00227c;
             --white: #ffffff;
+            --orange: #f69e22;
+            --light-bg: #fdfbf7;
+            --text-dark: #2d3748;
+            --text-muted: #718096;
+            --radius-md: 12px;
+            --radius-lg: 24px;
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -31,10 +48,53 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', 'Poppins', sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
+            color: var(--text-dark);
+            background-color: var(--light-bg);
+            background-image: radial-gradient(var(--orange) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            background-position: 0 0;
+        }
+
+        /* Preloader Styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--light-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid rgba(246, 158, 34, 0.2);
+            border-top-color: var(--accent-color);
+            border-right-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         a {
@@ -200,53 +260,93 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
 
         /* About Hero Section */
         .about-hero {
-            background: linear-gradient(135deg, #00227c 0%, #0a3baf 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 80px 0;
+            padding: 100px 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 50vh;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            animation: pulse 8s infinite alternate;
         }
 
         .about-hero h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            margin-bottom: 24px;
             text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: -1px;
         }
 
         .about-hero p {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             max-width: 800px;
             margin: 0 auto;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
         }
 
         /* About Content Section */
         .about-content {
-            padding: 80px 0;
-            background-color: white;
+            padding: 100px 0;
+            background-color: var(--light-bg);
         }
 
         .about-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 50px;
+            gap: 60px;
             align-items: center;
         }
 
         .about-image {
-            border-radius: 10px;
+            border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--white);
+            padding: 40px;
+        }
+
+        .about-image img {
+            max-height: 350px;
+            object-fit: contain;
+            transition: transform 0.5s ease;
+        }
+
+        .about-image:hover img {
+            transform: scale(1.05);
         }
 
         .about-text h2 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #00227c;
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -1px;
         }
 
         .about-text p {
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            color: #555;
+            margin-bottom: 24px;
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.8;
         }
 
         /* Our Story Section */
@@ -681,7 +781,8 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
             gap: 15px;
         }
 
-        .btn-login, .btn-register {
+        .btn-login,
+        .btn-register {
             padding: 12px 25px;
             border-radius: 50px;
             font-weight: 500;
@@ -819,29 +920,35 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader"></div>
+    </div>
+
     <!-- Login Popup -->
     <?php if (!$isLoggedIn): ?>
-    <div class="attractive-login-popup" id="login-popup">
-        <div class="login-popup-content">
-            <div class="login-popup-close">&times;</div>
-            <div class="login-popup-icon">
-                <i class="fas fa-user-lock"></i>
-            </div>
-            <h2>Login Required</h2>
-            <p>Please login to add items to your cart and access all features!</p>
-            <div class="login-popup-buttons">
-                <a href="login.php" class="btn-login">Login Now</a>
-                <a href="register.php" class="btn-register">Register</a>
+        <div class="attractive-login-popup" id="login-popup">
+            <div class="login-popup-content">
+                <div class="login-popup-close">&times;</div>
+                <div class="login-popup-icon">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h2>Login Required</h2>
+                <p>Please login to add items to your cart and access all features!</p>
+                <div class="login-popup-buttons">
+                    <a href="login.php" class="btn-login">Login Now</a>
+                    <a href="register.php" class="btn-register">Register</a>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="login-popup-overlay" id="login-popup-overlay"></div>
+        <div class="login-popup-overlay" id="login-popup-overlay"></div>
     <?php endif; ?>
-    
+
     <!-- Main Header -->
     <header class="main-header">
         <div class="container">
@@ -870,14 +977,14 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
                         <i class="fas fa-history"></i>
                     </a>
                 </div>
-                <?php if($isLoggedIn): ?>
-                <a href="logout.php" class="action-icon logout-icon">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="logout.php" class="action-icon logout-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 <?php else: ?>
-                <a href="login.php" class="action-icon">
-                    <i class="fas fa-user"></i>
-                </a>
+                    <a href="login.php" class="action-icon">
+                        <i class="fas fa-user"></i>
+                    </a>
                 <?php endif; ?>
                 <div class="mobile-menu-toggle" id="mobile-menu-toggle">
                     <i class="fas fa-bars"></i>
@@ -913,14 +1020,19 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
     <section class="about-content">
         <div class="container">
             <div class="about-grid">
-                <div class="about-text">
-                    <h2>Snack In - Cemilan Berkualitas</h2>
-                    <p>Snack In didirikan pada tahun 2020 dengan visi sederhana: menyediakan cemilan berkualitas tinggi dengan harga terjangkau untuk semua orang. Kami percaya bahwa makanan ringan tidak hanya sekadar camilan, tetapi juga pengalaman yang menyenangkan yang dapat dinikmati bersama keluarga dan teman.</p>
-                    <p>Setiap produk kami dibuat dengan bahan-bahan pilihan terbaik dan diolah dengan standar kualitas yang ketat. Kami berkomitmen untuk terus berinovasi dan menghadirkan variasi rasa baru yang menarik bagi pelanggan kami.</p>
-                    <p>Dari makanan ringan tradisional Indonesia hingga minuman segar yang menyegarkan, Snack In hadir untuk memenuhi kebutuhan cemilan Anda kapan saja dan di mana saja.</p>
-                </div>
                 <div class="about-image">
-                    <img src="assets/img/about-store.jpg" alt="Snack In Store">
+                    <img src="images/logo-tab.png" alt="Snack In Logo">
+                </div>
+                <div class="about-text">
+                    <h2>Cerita Di Balik <span style="color: var(--accent-color);">Snack In</span></h2>
+                    <p>Snack In lahir dari semangat untuk membawa inovasi di dunia kuliner ringan. Berawal dari ide
+                        sederhana sekelompok siswa yang ingin menciptakan pengalaman ngemil yang berbeda, kini kami
+                        telah berkembang menjadi brand snack lokal yang dicintai.</p>
+                    <p>Setiap produk kami dibuat dengan bahan-bahan pilihan terbaik dan diolah dengan standar kualitas
+                        yang ketat. Kami berkomitmen untuk terus berinovasi dan menghadirkan variasi rasa baru yang
+                        menarik bagi pelanggan kami.</p>
+                    <p>Dari makanan ringan tradisional Indonesia hingga minuman segar yang menyegarkan, Snack In hadir
+                        untuk memenuhi kebutuhan cemilan Anda kapan saja dan di mana saja.</p>
                 </div>
             </div>
         </div>
@@ -945,21 +1057,24 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
                     <div class="timeline-content">
                         <span class="timeline-date">2021</span>
                         <h3>Ekspansi Produk</h3>
-                        <p>Kami memperluas jangkauan produk dengan menambahkan berbagai minuman segar dan makanan ringan tradisional.</p>
+                        <p>Kami memperluas jangkauan produk dengan menambahkan berbagai minuman segar dan makanan ringan
+                            tradisional.</p>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-content">
                         <span class="timeline-date">2022</span>
                         <h3>Inovasi Digital</h3>
-                        <p>Meluncurkan website dan sistem pemesanan online untuk memudahkan pelanggan menikmati produk kami.</p>
+                        <p>Meluncurkan website dan sistem pemesanan online untuk memudahkan pelanggan menikmati produk
+                            kami.</p>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-content">
                         <span class="timeline-date">2023</span>
                         <h3>Kolaborasi Brand</h3>
-                        <p>Berkolaborasi dengan brand ambassador lokal untuk mempromosikan produk kami ke pasar yang lebih luas.</p>
+                        <p>Berkolaborasi dengan brand ambassador lokal untuk mempromosikan produk kami ke pasar yang
+                            lebih luas.</p>
                     </div>
                 </div>
                 <div class="timeline-item">
@@ -986,7 +1101,8 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <h3>Kualitas</h3>
-                    <p>Kami hanya menggunakan bahan-bahan berkualitas terbaik untuk menghasilkan produk yang lezat dan sehat.</p>
+                    <p>Kami hanya menggunakan bahan-bahan berkualitas terbaik untuk menghasilkan produk yang lezat dan
+                        sehat.</p>
                 </div>
                 <div class="value-card">
                     <div class="value-icon">
@@ -1067,63 +1183,59 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
     </section>
 
     <!-- Footer -->
-    <footer class="footer" id="footer">
+    <footer class="footer">
         <div class="container">
             <div class="footer-grid">
-                <!-- Company Info -->
                 <div class="footer-column">
-                    <h3>Snack In</h3>
+                    <h3>Tentang Snack In</h3>
+                    <p style="color: #ccc; margin-bottom: 20px;">Snack In adalah platform e-commerce yang menyediakan
+                        berbagai macam cemilan lezat untuk menemani hari-hari Anda.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Tautan Cepat</h3>
+                    <ul>
+                        <li><a href="user_ui.php">Beranda</a></li>
+                        <li><a href="user_ui.php#produk">Produk</a></li>
+                        <li><a href="About.php">Tentang Kami</a></li>
+                        <li><a href="#">Cara Pesan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Lokasi Kami</h3>
                     <ul class="footer-contact">
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>SMK BUDI LUHUR</span>
+                            <span>SMA & SMK Budi Luhur<br>Jl. Raden Saleh No. 999<br>Karang Tengah, Kota
+                                Tangerang</span>
                         </li>
+                    </ul>
+                    <div style="margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px solid #444;">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.4276185859345!2d106.71180807567793!3d-6.207191193780366!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f82d2ebbe9ad%3A0xc3f8376ac4ab9c!2sYayasan%20Pendidikan%20Budi%20Luhur%20(YPBL)!5e0!3m2!1sen!2sid!4v1709121287968!5m2!1sen!2sid"
+                            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Hubungi Kami</h3>
+                    <ul class="footer-contact">
                         <li>
                             <i class="fas fa-phone"></i>
-                            <a href="tel:+6281211734491">0812-1173-4491</a>
+                            <span>+62 812 3456 7890</span>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            <a href="mailto:mz.siradj@gmail.com">mz.siradj@gmail.com</a>
                         </li>
                     </ul>
-                </div>
-
-                <!-- Products -->
-                <div class="footer-column">
-                    <h3>Products</h3>
-                    <ul>
-                        <li><a href="user_ui.php#produk">Makanan</a></li>
-                        <li><a href="user_ui.php#produk">Minuman</a></li>
-                    </ul>
-                </div>
-
-                <!-- Further Info -->
-                <div class="footer-column">
-                    <h3>Further Info</h3>
-                    <ul>
-                        <li><a href="user_ui.php">Home</a></li>
-                        <li><a href="about.php">About</a></li>
-                        <li><a href="user_ui.php#produk">Shop</a></li>
-                        <li><a href="user_ui.php#testimonials">Testimoni</a></li>
-                    </ul>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="footer-column footer-newsletter">
-                    <h3>Newsletter</h3>
-                    <p>Subscribe to our newsletter to get the latest updates and offers.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email address">
-                        <button type="submit" class="btn">Subscribe</button>
-                    </div>
-                    <div class="footer-social">
-                        <h4>Follow Us</h4>
-                        <div class="social-icons">
-                            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
-                            <a href="tel:+6281211734491" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1135,12 +1247,12 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Check if user is logged in
             const isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
-            
+
             // Function to show attractive login popup
             function showLoginPopup() {
                 $('#login-popup').addClass('active').fadeIn(100);
@@ -1148,26 +1260,26 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
                 $('body').css('overflow', 'hidden');
                 return false;
             }
-            
+
             // Function to hide login popup
             function hideLoginPopup() {
                 $('#login-popup').removeClass('active').fadeOut(200);
                 $('#login-popup-overlay').removeClass('active').fadeOut(200);
                 $('body').css('overflow', '');
             }
-            
+
             // Close login popup when clicking close button or overlay
-            $('.login-popup-close, #login-popup-overlay').click(function() {
+            $('.login-popup-close, #login-popup-overlay').click(function () {
                 hideLoginPopup();
             });
-            
+
             // Prevent propagation when clicking on popup content to avoid closing
-            $('.login-popup-content').click(function(e) {
+            $('.login-popup-content').click(function (e) {
                 e.stopPropagation();
             });
-            
+
             // Handle cart icon click
-            $('.action-icon a[href="include/cart.php"]').click(function(e) {
+            $('.action-icon a[href="include/cart.php"]').click(function (e) {
                 if (!isLoggedIn) {
                     e.preventDefault();
                     return showLoginPopup();
@@ -1175,7 +1287,7 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
             });
 
             // Handle history link click
-            $('.action-icon a[href="history.php"]').click(function(e) {
+            $('.action-icon a[href="history.php"]').click(function (e) {
                 if (!isLoggedIn) {
                     e.preventDefault();
                     return showLoginPopup();
@@ -1190,7 +1302,7 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
                     data: {
                         action: "count"
                     },
-                    success: function(count) {
+                    success: function (count) {
                         $(".cart-count").text(count);
                     }
                 });
@@ -1232,9 +1344,19 @@ $isLoggedIn = isset($_SESSION['username']) ? true : false;
             if (mobileMenuClose) {
                 mobileMenuClose.addEventListener("click", closeMobileMenu);
             }
-            
+
             if (mobileMenuOverlay) {
                 mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+            }
+        });
+
+        // Initialize preloader
+        document.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                setTimeout(() => {
+                    preloader.classList.add('fade-out');
+                }, 400); // Small delay to ensure smooth transition
             }
         });
     </script>

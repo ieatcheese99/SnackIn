@@ -25,7 +25,7 @@ logAdminAction('Dashboard Access', 'User accessed admin dashboard');
 // Enhanced database queries with prepared statements
 try {
     $db = getDatabaseConnection();
-    
+
     // Query untuk mendapatkan data pesanan per hari (7 hari terakhir)
     $stmt = mysqli_prepare($db, "SELECT DATE(created_at) as order_date, COUNT(*) as total 
                          FROM orders 
@@ -122,7 +122,7 @@ try {
 } catch (Exception $e) {
     logAdminAction('Dashboard Error', $e->getMessage(), 'ERROR');
     $error_message = "Error loading dashboard data. Please try again.";
-    
+
     // Set default values
     $total_orders = $total_products = $total_users = $total_revenue = 0;
     $today_orders = $today_revenue = $pending_orders = 0;
@@ -135,16 +135,51 @@ require_once 'include/admin_header.php';
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Google Fonts -->
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap"
+    rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
+    /* Global Variables */
+    :root {
+        --primary-color: #00227c;
+        --secondary-color: #001a5e;
+        --accent-color: #f48c06;
+        --dark-blue: #00227c;
+        --white: #ffffff;
+        --orange: #f69e22;
+        --light-bg: #f8fafc;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
+    }
+
     /* Enhanced Dashboard Styles */
     .dashboard-welcome {
-        background: var(--primary-color);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: var(--white);
-        padding: 30px;
-        border-radius: var(--border-radius);
-        margin: 20px 0;
-        box-shadow: var(--box-shadow);
+        padding: 40px;
+        border-radius: var(--radius-lg);
+        margin: 20px 0 30px;
+        box-shadow: var(--shadow-md);
         position: relative;
         overflow: hidden;
     }
@@ -153,11 +188,12 @@ require_once 'include/admin_header.php';
         content: '';
         position: absolute;
         top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: float 6s ease-in-out infinite;
+        right: -10%;
+        width: 60vh;
+        height: 60vh;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite alternate;
     }
 
     .welcome-content {
@@ -170,15 +206,17 @@ require_once 'include/admin_header.php';
 
     .welcome-text h2 {
         margin: 0 0 10px 0;
-        font-size: 28px;
-        font-weight: 700;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-size: 32px;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        letter-spacing: -0.5px;
     }
 
     .welcome-text p {
         margin: 0;
         opacity: 0.9;
         font-size: 16px;
+        font-weight: 400;
     }
 
     .welcome-time {
@@ -195,13 +233,13 @@ require_once 'include/admin_header.php';
 
     .stat-card {
         background: var(--white);
-        border-radius: var(--border-radius);
+        border-radius: var(--radius-lg);
         padding: 30px;
-        box-shadow: var(--box-shadow);
+        box-shadow: var(--shadow-sm);
         transition: var(--transition);
         position: relative;
         overflow: hidden;
-        border-left: 4px solid var(--card-color, var(--primary-color));
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .stat-card::before {
@@ -209,59 +247,79 @@ require_once 'include/admin_header.php';
         position: absolute;
         top: 0;
         right: 0;
-        width: 80px;
-        height: 80px;
+        width: 120px;
+        height: 120px;
         background: var(--card-color, var(--primary-color));
-        opacity: 0.1;
+        opacity: 0.05;
         border-radius: 50%;
         transform: translate(30px, -30px);
+        transition: var(--transition);
     }
 
     .stat-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-lg);
     }
 
-    .stat-card.orders { --card-color: var(--primary-color); }
-    .stat-card.products { --card-color: var(--success-color); }
-    .stat-card.users { --card-color: var(--warning-color); }
-    .stat-card.revenue { --card-color: var(--danger-color); }
+    .stat-card:hover::before {
+        transform: translate(20px, -20px) scale(1.2);
+        opacity: 0.08;
+    }
+
+    .stat-card.orders {
+        --card-color: var(--primary-color);
+    }
+
+    .stat-card.products {
+        --card-color: var(--success-color);
+    }
+
+    .stat-card.users {
+        --card-color: var(--warning-color);
+    }
+
+    .stat-card.revenue {
+        --card-color: var(--accent-color);
+    }
 
     .stat-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
     .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 28px;
-        color: var(--white);
-        background: var(--card-color, var(--primary-color));
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        color: var(--card-color, var(--primary-color));
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .stat-trend {
-        font-size: 12px;
-        padding: 6px 12px;
+        font-size: 13px;
+        padding: 6px 14px;
         border-radius: 20px;
         background: rgba(16, 185, 129, 0.1);
         color: var(--success-color);
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .stat-value {
-        font-size: 36px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 40px;
         font-weight: 800;
-        color: #1f2937;
+        color: var(--text-dark);
         margin-bottom: 8px;
-        line-height: 1;
+        line-height: 1.1;
+        letter-spacing: -1px;
     }
 
     .stat-label {
@@ -281,80 +339,59 @@ require_once 'include/admin_header.php';
 
     .chart-container {
         background: var(--white);
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        padding: 30px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 35px;
         margin: 30px 0;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .chart-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
         flex-wrap: wrap;
         gap: 15px;
     }
 
     .chart-title {
-        font-size: 22px;
-        font-weight: 600;
-        color: #1f2937;
+        font-family: 'Outfit', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-dark);
         margin: 0;
-    }
-
-    .chart-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .chart-type-btn {
-        background: #f3f4f6;
-        border: 2px solid #e5e7eb;
-        padding: 10px 18px;
-        border-radius: 25px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: var(--transition);
-        font-weight: 500;
-    }
-
-    .chart-type-btn.active {
-        background: var(--primary-color);
-        color: var(--white);
-        border-color: var(--primary-color);
-    }
-
-    .chart-type-btn:hover:not(.active) {
-        background: #e5e7eb;
-        border-color: #d1d5db;
+        letter-spacing: -0.5px;
     }
 
     .recent-orders {
         background: var(--white);
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        padding: 30px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 35px;
         margin: 30px 0;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .recent-orders h3 {
-        margin-bottom: 25px;
-        color: #1f2937;
-        font-weight: 600;
+        margin-bottom: 30px;
+        color: var(--text-dark);
+        font-weight: 700;
+        font-family: 'Outfit', sans-serif;
+        font-size: 24px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        letter-spacing: -0.5px;
     }
 
     .new-orders-alert {
-        background: var(--danger-color);
+        background: linear-gradient(135deg, var(--accent-color), var(--orange));
         color: var(--white);
-        border-radius: var(--border-radius);
-        padding: 25px;
+        border-radius: var(--radius-lg);
+        padding: 30px;
         margin: 25px 0;
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        box-shadow: 0 10px 25px rgba(246, 158, 34, 0.3);
         position: relative;
         overflow: hidden;
     }
@@ -366,18 +403,30 @@ require_once 'include/admin_header.php';
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         animation: shimmer 2s infinite;
     }
 
     @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 100%; }
+        0% {
+            left: -100%;
+        }
+
+        100% {
+            left: 100%;
+        }
     }
 
     @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
     }
 
     .new-orders-alert h4 {
@@ -408,11 +457,11 @@ require_once 'include/admin_header.php';
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
-        
+
         .stat-card {
             padding: 25px 20px;
         }
-        
+
         .stat-value {
             font-size: 28px;
         }
@@ -442,7 +491,8 @@ require_once 'include/admin_header.php';
             padding: 20px;
         }
 
-        .chart-container, .recent-orders {
+        .chart-container,
+        .recent-orders {
             padding: 20px;
         }
     }
@@ -501,18 +551,19 @@ require_once 'include/admin_header.php';
 
         <!-- New Orders Alert -->
         <?php if ($pending_orders > 0): ?>
-        <div class="new-orders-alert">
-            <h4><i class="fas fa-bell"></i> Pesanan Baru!</h4>
-            <p class="mb-3">
-                Anda memiliki <strong><?php echo $pending_orders; ?> pesanan baru</strong> yang perlu diproses segera.
-                <?php if ($today_orders > 0): ?>
-                    Total hari ini: <strong><?php echo $today_orders; ?> pesanan</strong> dengan pendapatan <strong>Rp <?php echo number_format($today_revenue, 0, ',', '.'); ?></strong>.
-                <?php endif; ?>
-            </p>
-            <a href="pesanan.php" class="btn" onclick="showLoading()">
-                <i class="fas fa-eye"></i> Lihat Pesanan
-            </a>
-        </div>
+            <div class="new-orders-alert">
+                <h4><i class="fas fa-bell"></i> Pesanan Baru!</h4>
+                <p class="mb-3">
+                    Anda memiliki <strong><?php echo $pending_orders; ?> pesanan baru</strong> yang perlu diproses segera.
+                    <?php if ($today_orders > 0): ?>
+                        Total hari ini: <strong><?php echo $today_orders; ?> pesanan</strong> dengan pendapatan <strong>Rp
+                            <?php echo number_format($today_revenue, 0, ',', '.'); ?></strong>.
+                    <?php endif; ?>
+                </p>
+                <a href="pesanan.php" class="btn" onclick="showLoading()">
+                    <i class="fas fa-eye"></i> Lihat Pesanan
+                </a>
+            </div>
         <?php endif; ?>
 
         <!-- Stats Cards -->
@@ -530,7 +581,7 @@ require_once 'include/admin_header.php';
                     <i class="fas fa-arrow-up"></i> <?php echo $pending_orders; ?> pending
                 </div>
             </div>
-            
+
             <div class="stat-card products">
                 <div class="stat-header">
                     <div class="stat-icon">
@@ -544,7 +595,7 @@ require_once 'include/admin_header.php';
                     <i class="fas fa-check-circle"></i> Semua tersedia
                 </div>
             </div>
-            
+
             <div class="stat-card users">
                 <div class="stat-header">
                     <div class="stat-icon">
@@ -558,7 +609,7 @@ require_once 'include/admin_header.php';
                     <i class="fas fa-user-plus"></i> Pelanggan aktif
                 </div>
             </div>
-            
+
             <div class="stat-card revenue">
                 <div class="stat-header">
                     <div class="stat-icon">
@@ -591,52 +642,93 @@ require_once 'include/admin_header.php';
         <div class="recent-orders">
             <h3><i class="fas fa-clock"></i> Pesanan Terbaru</h3>
             <div class="table-container">
-                <table class="enhanced-table">
-                    <thead>
+                <table class="enhanced-table table table-hover"
+                    style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; color: var(--text-dark);">
+                    <thead
+                        style="background: var(--light-bg); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">
                         <tr>
-                            <th>ID</th>
-                            <th>Pelanggan</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Tanggal</th>
-                            <th>Aksi</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                ID</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Pelanggan</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Total</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Status</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: left; font-weight: 700; color: var(--text-muted);">
+                                Tanggal</th>
+                            <th
+                                style="padding: 1rem; border-bottom: 2px solid rgba(0,0,0,0.05); text-align: center; font-weight: 700; color: var(--text-muted);">
+                                Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($recent_orders && $recent_orders->num_rows > 0): ?>
                             <?php while ($order = $recent_orders->fetch_assoc()): ?>
-                            <tr>
-                                <td><strong>#<?php echo $order['id']; ?></strong></td>
-                                <td><?php echo htmlspecialchars($order['nama']); ?></td>
-                                <td><strong>Rp <?php echo number_format($order['total_harga'], 0, ',', '.'); ?></strong></td>
-                                <td>
-                                    <?php 
-                                    $status = $order['status'] ?? 'pending';
-                                    $badge_class = '';
-                                    switch($status) {
-                                        case 'completed': $badge_class = 'bg-success'; break;
-                                        case 'processing': $badge_class = 'bg-warning'; break;
-                                        case 'cancelled': $badge_class = 'bg-danger'; break;
-                                        default: $badge_class = 'bg-info';
-                                    }
-                                    ?>
-                                    <span class="badge <?php echo $badge_class; ?>">
-                                        <?php echo ucfirst($status); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></td>
-                                <td>
-                                    <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary" onclick="showLoading()">
-                                        <i class="fas fa-eye"></i> Lihat
-                                    </a>
-                                </td>
-                            </tr>
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); transition: var(--transition-fast);">
+                                    <td style="padding: 1rem;"><strong
+                                            style="color: var(--primary-color);">#<?php echo $order['id']; ?></strong></td>
+                                    <td style="padding: 1rem; font-weight: 500;"><?php echo htmlspecialchars($order['nama']); ?>
+                                    </td>
+                                    <td style="padding: 1rem;"><strong style="font-family: 'Outfit', sans-serif;">Rp
+                                            <?php echo number_format($order['total_harga'], 0, ',', '.'); ?></strong></td>
+                                    <td style="padding: 1rem;">
+                                        <?php
+                                        $status = $order['status'] ?? 'pending';
+
+                                        // Make inline badge
+                                        $bg = '#e2e8f0';
+                                        $col = '#475569';
+                                        if ($status == 'completed') {
+                                            $bg = '#d1fae5';
+                                            $col = '#059669';
+                                        }
+                                        if ($status == 'processing') {
+                                            $bg = '#fef3c7';
+                                            $col = '#d97706';
+                                        }
+                                        if ($status == 'cancelled') {
+                                            $bg = '#fee2e2';
+                                            $col = '#dc2626';
+                                        }
+                                        if ($status == 'pending') {
+                                            $bg = '#e0e7ff';
+                                            $col = '#4f46e5';
+                                        }
+                                        ?>
+                                        <span
+                                            style="background: <?php echo $bg; ?>; color: <?php echo $col; ?>; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; display: inline-block;">
+                                            <?php echo ucfirst($status); ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                                        <?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?></td>
+                                    <td style="padding: 1rem; text-align: center;">
+                                        <a href="pesanan.php?view=<?php echo $order['id']; ?>" class="btn btn-sm"
+                                            style="display: inline-block; padding: 8px 16px; background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem; transition: var(--transition); box-shadow: 0 4px 6px rgba(0,34,124,0.2);"
+                                            onclick="showLoading()">
+                                            <i class="fas fa-eye"></i> Detail
+                                        </a>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center" style="padding: 40px;">
-                                    <i class="fas fa-inbox" style="font-size: 48px; color: #ccc; margin-bottom: 15px; display: block;"></i>
-                                    <p style="color: #666; margin: 0;">Belum ada pesanan</p>
+                                <td colspan="6" class="text-center" style="padding: 60px 40px; text-align: center;">
+                                    <div
+                                        style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                                        <i class="fas fa-inbox" style="font-size: 32px; color: #94a3b8;"></i>
+                                    </div>
+                                    <h4
+                                        style="color: var(--text-dark); font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">
+                                        Belum ada pesanan</h4>
+                                    <p style="color: var(--text-muted); margin: 0;">Saat ini belum ada data pesanan baru
+                                        yang masuk ke sistem.</p>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -648,209 +740,209 @@ require_once 'include/admin_header.php';
 </div>
 
 <script>
-// Enhanced JavaScript with security improvements
-document.addEventListener('DOMContentLoaded', function() {
-    // Prevent multiple initializations
-    if (window.chartInitialized) return;
-    window.chartInitialized = true;
+    // Enhanced JavaScript with security improvements
+    document.addEventListener('DOMContentLoaded', function () {
+        // Prevent multiple initializations
+        if (window.chartInitialized) return;
+        window.chartInitialized = true;
 
-    // Data dari PHP dengan validation
-    let dates, orderCounts, revenueData;
-    try {
-        dates = <?php echo $datesJSON; ?>;
-        orderCounts = <?php echo $ordersDataJSON; ?>;
-        revenueData = <?php echo $revenueDataJSON; ?>;
-        
-        // Validate data
-        if (!Array.isArray(dates) || !Array.isArray(orderCounts) || !Array.isArray(revenueData)) {
-            throw new Error('Invalid chart data');
+        // Data dari PHP dengan validation
+        let dates, orderCounts, revenueData;
+        try {
+            dates = <?php echo $datesJSON; ?>;
+            orderCounts = <?php echo $ordersDataJSON; ?>;
+            revenueData = <?php echo $revenueDataJSON; ?>;
+
+            // Validate data
+            if (!Array.isArray(dates) || !Array.isArray(orderCounts) || !Array.isArray(revenueData)) {
+                throw new Error('Invalid chart data');
+            }
+        } catch (e) {
+            console.error('Chart data error:', e);
+            dates = [];
+            orderCounts = [];
+            revenueData = [];
         }
-    } catch (e) {
-        console.error('Chart data error:', e);
-        dates = [];
-        orderCounts = [];
-        revenueData = [];
-    }
 
-    // Initialize chart only if canvas exists
-    const chartCanvas = document.getElementById('ordersChart');
-    if (!chartCanvas || dates.length === 0) {
-        console.warn('Chart canvas not found or no data available');
-        return;
-    }
+        // Initialize chart only if canvas exists
+        const chartCanvas = document.getElementById('ordersChart');
+        if (!chartCanvas || dates.length === 0) {
+            console.warn('Chart canvas not found or no data available');
+            return;
+        }
 
-    // Create chart with enhanced security
-    const ctx = chartCanvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 150);
-    gradient.addColorStop(0, 'rgba(0, 34, 124, 0.7)');
-    gradient.addColorStop(1, 'rgba(0, 34, 124, 0.1)');
+        // Create chart with enhanced security
+        const ctx = chartCanvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+        gradient.addColorStop(0, 'rgba(0, 34, 124, 0.7)');
+        gradient.addColorStop(1, 'rgba(0, 34, 124, 0.1)');
 
-    // Chart configuration
-    const chartConfig = {
-        type: 'bar',
-        data: {
-            labels: dates,
-            datasets: [{
-                label: 'Jumlah Pesanan',
-                data: orderCounts,
-                backgroundColor: gradient,
-                borderColor: 'rgba(0, 34, 124, 1)',
-                borderWidth: 2,
-                borderRadius: 8,
-                maxBarThickness: 50
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 3,
-            animation: {
-                duration: 800,
-                easing: 'easeOutQuart'
+        // Chart configuration
+        const chartConfig = {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Jumlah Pesanan',
+                    data: orderCounts,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(0, 34, 124, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    maxBarThickness: 50
+                }]
             },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0,
-                        font: {
-                            family: 'Poppins',
-                            size: 12
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 3,
+                animation: {
+                    duration: 800,
+                    easing: 'easeOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: {
+                                family: 'Poppins',
+                                size: 12
+                            },
+                            color: '#6b7280'
                         },
-                        color: '#6b7280'
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)',
+                            drawBorder: false
+                        }
                     },
-                    grid: {
-                        color: 'rgba(200, 200, 200, 0.2)',
-                        drawBorder: false
+                    x: {
+                        ticks: {
+                            font: {
+                                family: 'Poppins',
+                                size: 12
+                            },
+                            color: '#6b7280'
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 },
-                x: {
-                    ticks: {
-                        font: {
-                            family: 'Poppins',
-                            size: 12
-                        },
-                        color: '#6b7280'
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                family: 'Poppins',
+                                size: 13,
+                                weight: '600'
+                            },
+                            boxWidth: 12,
+                            padding: 15,
+                            color: '#374151'
+                        }
                     },
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
                             family: 'Poppins',
-                            size: 13,
+                            size: 14,
                             weight: '600'
                         },
-                        boxWidth: 12,
-                        padding: 15,
-                        color: '#374151'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleFont: {
-                        family: 'Poppins',
-                        size: 14,
-                        weight: '600'
-                    },
-                    bodyFont: {
-                        family: 'Poppins',
-                        size: 13
-                    },
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        title: function(tooltipItems) {
-                            return 'Tanggal: ' + tooltipItems[0].label;
+                        bodyFont: {
+                            family: 'Poppins',
+                            size: 13
                         },
-                        label: function(context) {
-                            if (context.dataset.label === 'Jumlah Pesanan') {
-                                return 'Pesanan: ' + context.raw;
-                            } else {
-                                return 'Pendapatan: Rp ' + formatNumber(context.raw);
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function (tooltipItems) {
+                                return 'Tanggal: ' + tooltipItems[0].label;
+                            },
+                            label: function (context) {
+                                if (context.dataset.label === 'Jumlah Pesanan') {
+                                    return 'Pesanan: ' + context.raw;
+                                } else {
+                                    return 'Pendapatan: Rp ' + formatNumber(context.raw);
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-    };
+        };
 
-    // Create chart
-    const ordersChart = new Chart(ctx, chartConfig);
+        // Create chart
+        const ordersChart = new Chart(ctx, chartConfig);
 
-    // Chart type buttons event listeners
-    document.querySelectorAll('.chart-type-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove active class from all buttons
-            document.querySelectorAll('.chart-type-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+        // Chart type buttons event listeners
+        document.querySelectorAll('.chart-type-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                // Remove active class from all buttons
+                document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
 
-            // Add active class to clicked button
-            this.classList.add('active');
+                // Add active class to clicked button
+                this.classList.add('active');
 
-            // Change chart type
-            const chartType = this.getAttribute('data-chart-type');
+                // Change chart type
+                const chartType = this.getAttribute('data-chart-type');
 
-            try {
-                if (chartType === 'revenue') {
-                    // Show revenue data
-                    ordersChart.data.datasets[0].label = 'Pendapatan (Rp)';
-                    ordersChart.data.datasets[0].data = revenueData;
-                    ordersChart.options.scales.y.ticks.callback = function(value) {
-                        return 'Rp ' + formatNumber(value);
-                    };
-                } else {
-                    // Show orders data
-                    ordersChart.data.datasets[0].label = 'Jumlah Pesanan';
-                    ordersChart.data.datasets[0].data = orderCounts;
-                    ordersChart.options.scales.y.ticks.callback = function(value) {
-                        return value;
-                    };
-
-                    // Change chart type (bar or line)
-                    ordersChart.config.type = chartType;
-
-                    if (chartType === 'line') {
-                        // Line chart configuration
-                        ordersChart.data.datasets[0].fill = true;
-                        ordersChart.data.datasets[0].tension = 0.4;
-                        ordersChart.data.datasets[0].pointBackgroundColor = 'rgba(0, 34, 124, 1)';
-                        ordersChart.data.datasets[0].pointBorderColor = '#ffffff';
-                        ordersChart.data.datasets[0].pointBorderWidth = 2;
-                        ordersChart.data.datasets[0].pointRadius = 5;
+                try {
+                    if (chartType === 'revenue') {
+                        // Show revenue data
+                        ordersChart.data.datasets[0].label = 'Pendapatan (Rp)';
+                        ordersChart.data.datasets[0].data = revenueData;
+                        ordersChart.options.scales.y.ticks.callback = function (value) {
+                            return 'Rp ' + formatNumber(value);
+                        };
                     } else {
-                        // Bar chart configuration
-                        ordersChart.data.datasets[0].fill = false;
-                        ordersChart.data.datasets[0].tension = 0;
+                        // Show orders data
+                        ordersChart.data.datasets[0].label = 'Jumlah Pesanan';
+                        ordersChart.data.datasets[0].data = orderCounts;
+                        ordersChart.options.scales.y.ticks.callback = function (value) {
+                            return value;
+                        };
+
+                        // Change chart type (bar or line)
+                        ordersChart.config.type = chartType;
+
+                        if (chartType === 'line') {
+                            // Line chart configuration
+                            ordersChart.data.datasets[0].fill = true;
+                            ordersChart.data.datasets[0].tension = 0.4;
+                            ordersChart.data.datasets[0].pointBackgroundColor = 'rgba(0, 34, 124, 1)';
+                            ordersChart.data.datasets[0].pointBorderColor = '#ffffff';
+                            ordersChart.data.datasets[0].pointBorderWidth = 2;
+                            ordersChart.data.datasets[0].pointRadius = 5;
+                        } else {
+                            // Bar chart configuration
+                            ordersChart.data.datasets[0].fill = false;
+                            ordersChart.data.datasets[0].tension = 0;
+                        }
                     }
+
+                    // Update chart
+                    ordersChart.update('active');
+                } catch (error) {
+                    console.error('Chart update error:', error);
                 }
-
-                // Update chart
-                ordersChart.update('active');
-            } catch (error) {
-                console.error('Chart update error:', error);
-            }
+            });
         });
-    });
 
-    // Format number with thousand separators
-    function formatNumber(number) {
-        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
-});
+        // Format number with thousand separators
+        function formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+    });
 </script>
 
 <?php require_once 'include/admin_footer.php'; ?>

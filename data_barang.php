@@ -8,7 +8,8 @@ require_once 'config/database.php';
 session_start();
 
 // Fungsi untuk memeriksa akses admin
-function requireAdmin() {
+function requireAdmin()
+{
     if (!isset($_SESSION['username']) || $_SESSION['level'] !== 'admin') {
         header("Location: login.php");
         exit();
@@ -34,35 +35,45 @@ include 'include/admin_header.php';
         --primary-color: #00227c;
         --secondary-color: #001a5e;
         --accent-color: #f48c06;
+        --white: #ffffff;
+        --orange: #f69e22;
+        --light-bg: #f8fafc;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+        --transition-fast: 0.2s ease;
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         --success-color: #10b981;
         --warning-color: #f59e0b;
         --danger-color: #ef4444;
-        --dark-blue: #00227c;
-        --white: #ffffff;
-        --orange-bg: #f69e22;
-        --transition: all 0.3s ease;
     }
 
     body {
-        font-family: 'Poppins', sans-serif;
-        background: var(--orange-bg);
+        font-family: 'Inter', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
         min-height: 100vh;
-        color: #333;
     }
 
     /* Page Header */
     .page-header {
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        color: white;
+        color: var(--white);
         padding: 40px 0;
         margin-bottom: 30px;
         text-align: center;
+        box-shadow: var(--shadow-md);
     }
 
     .page-title {
+        font-family: 'Outfit', sans-serif;
         font-size: 2.5rem;
-        font-weight: 700;
+        font-weight: 800;
         margin-bottom: 10px;
+        letter-spacing: -1px;
     }
 
     .page-subtitle {
@@ -102,17 +113,17 @@ include 'include/admin_header.php';
 
     .nav-btn.active {
         background: var(--primary-color);
-        color: white;
+        color: var(--white);
     }
 
     /* Content Container */
     .content-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
         padding: 30px;
         margin: 20px;
-        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     /* Animation for Content */
@@ -125,6 +136,7 @@ include 'include/admin_header.php';
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -140,6 +152,7 @@ include 'include/admin_header.php';
         from {
             opacity: 0;
         }
+
         to {
             opacity: 1;
         }
@@ -154,41 +167,56 @@ include 'include/admin_header.php';
     }
 
     .stat-card {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        border-radius: 12px;
-        padding: 20px;
+        background: var(--white);
+        border-radius: var(--radius-md);
+        padding: 25px;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-left: 5px solid var(--primary-color);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(0, 0, 0, 0.05);
         transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary-color);
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        box-shadow: var(--shadow-md);
     }
 
     .stat-number {
-        font-size: 32px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 36px;
         font-weight: 800;
-        color: var(--primary-color);
+        color: var(--text-dark);
         display: block;
+        line-height: 1.2;
     }
 
     .stat-label {
-        color: #666;
+        color: var(--text-muted);
         font-size: 14px;
         text-transform: uppercase;
+        font-weight: 600;
         letter-spacing: 0.5px;
         margin-top: 5px;
     }
 
     /* Table Container */
     .table-container {
-        background: white;
-        border-radius: 15px;
+        background: var(--white);
+        border-radius: var(--radius-lg);
         overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
         margin-top: 20px;
     }
 
@@ -196,35 +224,31 @@ include 'include/admin_header.php';
         width: 100%;
         border-collapse: collapse;
         margin: 0;
-        background: white;
+        color: var(--text-dark);
     }
 
     .enhanced-table thead th {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        color: white;
-        padding: 18px 15px;
+        background: var(--light-bg);
+        color: var(--text-muted);
+        padding: 15px 20px;
         text-align: left;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        font-size: 14px;
-        border: none;
+        font-size: 12px;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
     }
 
     .enhanced-table tbody td {
-        padding: 15px;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         vertical-align: middle;
+        font-size: 14px;
+        transition: var(--transition-fast);
     }
 
-    .enhanced-table tbody tr {
-        transition: var(--transition);
-    }
-
-    .enhanced-table tbody tr:hover {
-        background-color: #f8f9ff;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    .enhanced-table tbody tr:hover td {
+        background-color: var(--light-bg);
     }
 
     /* Product Image in Table */
@@ -251,142 +275,147 @@ include 'include/admin_header.php';
     /* Product Info */
     .product-info h6 {
         margin: 0 0 5px 0;
+        font-family: 'Outfit', sans-serif;
         font-weight: 700;
-        color: #333;
+        color: var(--text-dark);
         font-size: 16px;
     }
 
     .product-info .category {
         display: inline-block;
-        background: var(--primary-color);
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
+        background: rgba(0, 34, 124, 0.1);
+        color: var(--primary-color);
+        padding: 4px 10px;
+        border-radius: 50px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
+        text-transform: uppercase;
     }
 
     .product-info .description {
-        color: #666;
+        color: var(--text-muted);
         font-size: 13px;
-        margin-top: 5px;
+        margin-top: 8px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        line-height: 1.5;
     }
 
     /* Price Display */
     .price-display {
+        font-family: 'Outfit', sans-serif;
         font-size: 18px;
-        font-weight: 700;
+        font-weight: 800;
         color: var(--primary-color);
     }
 
     /* Stock Badge */
     .stock-info {
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 
     .stock-number {
         font-size: 16px;
-        font-weight: 600;
-        color: #333;
+        font-weight: 700;
+        color: var(--text-dark);
         display: block;
-        margin-bottom: 5px;
     }
 
     .stock-badge {
-        padding: 4px 10px;
-        border-radius: 15px;
+        padding: 6px 12px;
+        border-radius: 50px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .in-stock {
         background: #d1fae5;
-        color: #047857;
+        color: #059669;
     }
 
     .low-stock {
         background: #fef3c7;
-        color: #b45309;
+        color: #d97706;
     }
 
     .out-of-stock {
         background: #fee2e2;
-        color: #b91c1c;
+        color: #dc2626;
     }
 
     /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 8px;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .btn-action {
         padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
+        border-radius: 8px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-    }
-
-    .btn-edit {
-        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
-        color: white;
-    }
-
-    .btn-edit:hover {
-        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        color: white;
-    }
-
-    .btn-delete {
-        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
-        color: white;
+        gap: 6px;
         border: none;
     }
 
-    .btn-delete:hover {
-        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    .btn-edit {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .btn-edit:hover {
+        background: #fde68a;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        color: white;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-delete:hover {
+        background: #fecaca;
+        transform: translateY(-2px);
     }
 
     /* Add Button */
     .btn-add {
-        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-        color: white;
-        padding: 12px 25px;
-        border-radius: 25px;
+        background: var(--primary-color);
+        color: var(--white);
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 14px;
         transition: var(--transition);
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 10px rgba(0, 34, 124, 0.2);
         margin-bottom: 20px;
     }
 
     .btn-add:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: var(--secondary-color);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        color: white;
+        box-shadow: 0 6px 15px rgba(0, 34, 124, 0.3);
+        color: var(--white);
     }
 
     /* Empty State */
@@ -422,7 +451,7 @@ include 'include/admin_header.php';
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.7);
+        background: rgba(0, 0, 0, 0.7);
         display: none;
         justify-content: center;
         align-items: center;
@@ -440,7 +469,7 @@ include 'include/admin_header.php';
         border-radius: 15px;
         text-align: center;
         max-width: 400px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         margin: 20px;
         animation: modalSlideIn 0.3s ease;
     }
@@ -450,6 +479,7 @@ include 'include/admin_header.php';
             opacity: 0;
             transform: translateY(-50px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -535,7 +565,7 @@ include 'include/admin_header.php';
         .enhanced-table {
             font-size: 14px;
         }
-        
+
         .enhanced-table thead th,
         .enhanced-table tbody td {
             padding: 12px 8px;
@@ -626,11 +656,11 @@ include 'include/admin_header.php';
             <?php
             // Get statistics with proper error handling
             $total_products = $products ? mysqli_num_rows($products) : 0;
-            
+
             $low_stock_query = "SELECT COUNT(*) as count FROM barang WHERE Stok <= 5";
             $low_stock_result = mysqli_query($db, $low_stock_query);
             $low_stock_count = $low_stock_result ? mysqli_fetch_assoc($low_stock_result)['count'] : 0;
-            
+
             $out_of_stock_query = "SELECT COUNT(*) as count FROM barang WHERE Stok = 0";
             $out_of_stock_result = mysqli_query($db, $out_of_stock_query);
             $out_of_stock_count = $out_of_stock_result ? mysqli_fetch_assoc($out_of_stock_result)['count'] : 0;
@@ -672,18 +702,18 @@ include 'include/admin_header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
+                        <?php
                         mysqli_data_seek($products, 0);
-                        while ($product = mysqli_fetch_assoc($products)): 
+                        while ($product = mysqli_fetch_assoc($products)):
                             // Ensure all required fields exist with default values
                             $product_id = $product['id'] ?? 0;
                             $product_name = $product['nama'] ?? 'Nama tidak tersedia';
-                            $product_price = isset($product['harga']) ? (float)$product['harga'] : 0;
-                            $product_stock = isset($product['stok']) ? (int)$product['stok'] : 0;
+                            $product_price = isset($product['harga']) ? (float) $product['harga'] : 0;
+                            $product_stock = isset($product['stok']) ? (int) $product['stok'] : 0;
                             $product_image = $product['gambar'] ?? '';
                             $product_category = $product['kategori_nama'] ?? 'Tanpa Kategori';
                             $product_description = $product['Deskripsi'] ?? '';
-                            
+
                             // Fix image path - handle both cases
                             $image_path = '';
                             if (!empty($product_image)) {
@@ -695,7 +725,7 @@ include 'include/admin_header.php';
                                     $image_path = 'uploads/' . $product_image;
                                 }
                             }
-                            
+
                             // Determine stock status
                             $stock_status = '';
                             $stock_class = '';
@@ -709,15 +739,14 @@ include 'include/admin_header.php';
                                 $stock_status = 'Tersedia';
                                 $stock_class = 'in-stock';
                             }
-                        ?>
+                            ?>
                             <tr>
                                 <td><strong>#<?php echo $product_id; ?></strong></td>
                                 <td>
                                     <?php if (!empty($image_path) && file_exists($image_path)): ?>
-                                        <img src="<?php echo htmlspecialchars($image_path); ?>" 
-                                             alt="<?php echo htmlspecialchars($product_name); ?>" 
-                                             class="product-image-small"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <img src="<?php echo htmlspecialchars($image_path); ?>"
+                                            alt="<?php echo htmlspecialchars($product_name); ?>" class="product-image-small"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="product-placeholder" style="display: none;">
                                             <i class="fas fa-image"></i>
                                         </div>
@@ -751,19 +780,20 @@ include 'include/admin_header.php';
                                 </td>
                                 <td>
                                     <span class="stock-badge <?php echo $stock_class; ?>">
-                                        <i class="fas fa-<?php echo $product_stock > 5 ? 'check-circle' : ($product_stock > 0 ? 'exclamation-triangle' : 'times-circle'); ?>"></i>
+                                        <i
+                                            class="fas fa-<?php echo $product_stock > 5 ? 'check-circle' : ($product_stock > 0 ? 'exclamation-triangle' : 'times-circle'); ?>"></i>
                                         <?php echo $stock_status; ?>
                                     </span>
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a href="form_ubah.php?id=<?php echo $product_id; ?>" class="btn-action btn-edit" onclick="showLoading()">
+                                        <a href="form_ubah.php?id=<?php echo $product_id; ?>" class="btn-action btn-edit"
+                                            onclick="showLoading()">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
-                                        <button class="btn-action btn-delete" 
-                                                data-product-id="<?php echo $product_id; ?>"
-                                                data-product-name="<?php echo htmlspecialchars($product_name); ?>"
-                                                onclick="showDeleteModal(this)">
+                                        <button class="btn-action btn-delete" data-product-id="<?php echo $product_id; ?>"
+                                            data-product-name="<?php echo htmlspecialchars($product_name); ?>"
+                                            onclick="showDeleteModal(this)">
                                             <i class="fas fa-trash"></i> Hapus
                                         </button>
                                     </div>
@@ -806,7 +836,7 @@ include 'include/admin_header.php';
     function showDeleteModal(button) {
         const productId = button.getAttribute('data-product-id');
         const productName = button.getAttribute('data-product-name');
-        
+
         document.getElementById('productNameDisplay').textContent = `"${productName}"`;
         document.getElementById('confirmDeleteBtn').href = `form_delete.php?id=${productId}`;
         document.getElementById('deleteModal').classList.add('show');
@@ -818,32 +848,32 @@ include 'include/admin_header.php';
     }
 
     // Close modal when clicking outside
-    document.getElementById('deleteModal').addEventListener('click', function(e) {
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
         if (e.target === this) {
             hideDeleteModal();
         }
     });
 
     // Prevent modal from closing when clicking inside content
-    document.querySelector('.delete-modal-content').addEventListener('click', function(e) {
+    document.querySelector('.delete-modal-content').addEventListener('click', function (e) {
         e.stopPropagation();
     });
 
     // Add loading to confirm delete button
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
         showLoading();
     });
 
     // Add loading animation for edit buttons
     document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             showLoading();
         });
     });
 
     // Add loading animation for add button
     document.querySelectorAll('.btn-add').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             showLoading();
         });
     });

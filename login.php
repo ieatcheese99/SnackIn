@@ -64,11 +64,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Snack In</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/img/Logo Bisnis Bengkel Otomotif (3).png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -103,15 +108,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             animation: float 6s ease-in-out infinite;
         }
 
-        .particle:nth-child(1) { width: 10px; height: 10px; left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 15px; height: 15px; left: 20%; animation-delay: 1s; }
-        .particle:nth-child(3) { width: 8px; height: 8px; left: 30%; animation-delay: 2s; }
-        .particle:nth-child(4) { width: 12px; height: 12px; left: 40%; animation-delay: 3s; }
-        .particle:nth-child(5) { width: 6px; height: 6px; left: 50%; animation-delay: 4s; }
-        .particle:nth-child(6) { width: 14px; height: 14px; left: 60%; animation-delay: 5s; }
-        .particle:nth-child(7) { width: 9px; height: 9px; left: 70%; animation-delay: 0.5s; }
-        .particle:nth-child(8) { width: 11px; height: 11px; left: 80%; animation-delay: 1.5s; }
-        .particle:nth-child(9) { width: 7px; height: 7px; left: 90%; animation-delay: 2.5s; }
+        .particle:nth-child(1) {
+            width: 10px;
+            height: 10px;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            left: 20%;
+            animation-delay: 1s;
+        }
+
+        .particle:nth-child(3) {
+            width: 8px;
+            height: 8px;
+            left: 30%;
+            animation-delay: 2s;
+        }
+
+        .particle:nth-child(4) {
+            width: 12px;
+            height: 12px;
+            left: 40%;
+            animation-delay: 3s;
+        }
+
+        .particle:nth-child(5) {
+            width: 6px;
+            height: 6px;
+            left: 50%;
+            animation-delay: 4s;
+        }
+
+        .particle:nth-child(6) {
+            width: 14px;
+            height: 14px;
+            left: 60%;
+            animation-delay: 5s;
+        }
+
+        .particle:nth-child(7) {
+            width: 9px;
+            height: 9px;
+            left: 70%;
+            animation-delay: 0.5s;
+        }
+
+        .particle:nth-child(8) {
+            width: 11px;
+            height: 11px;
+            left: 80%;
+            animation-delay: 1.5s;
+        }
+
+        .particle:nth-child(9) {
+            width: 7px;
+            height: 7px;
+            left: 90%;
+            animation-delay: 2.5s;
+        }
 
         /* Background decoration */
         body::before {
@@ -290,8 +348,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             animation: fadeInUp 0.6s ease-out calc(0.6s + var(--delay)) both;
         }
 
-        .form-group:nth-child(1) { --delay: 0.1s; }
-        .form-group:nth-child(2) { --delay: 0.2s; }
+        .form-group:nth-child(1) {
+            --delay: 0.1s;
+        }
+
+        .form-group:nth-child(2) {
+            --delay: 0.2s;
+        }
 
         .form-group label {
             display: block;
@@ -435,15 +498,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             .container {
                 grid-template-columns: 1fr;
             }
-            
+
             .left-side {
                 display: none;
             }
-            
+
             .right-side {
                 background: linear-gradient(135deg, #00227c 0%, #1e40af 50%, #f69e22 100%);
             }
-            
+
             .login-form {
                 background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(10px);
@@ -454,16 +517,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             .right-side {
                 padding: 1rem;
             }
-            
+
             .login-form {
                 padding: 2rem 1.5rem;
                 max-width: 100%;
             }
-            
+
             .welcome-content h1 {
                 font-size: 2rem;
             }
-            
+
             .snack-illustration {
                 width: 100px;
                 height: 100px;
@@ -492,8 +555,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
 
         /* Animations */
@@ -502,6 +570,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: translateX(-30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -513,6 +582,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: translateX(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -524,6 +594,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -535,6 +606,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -546,6 +618,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -557,13 +630,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 opacity: 0;
                 transform: scale(0.3);
             }
+
             50% {
                 opacity: 1;
                 transform: scale(1.05);
             }
+
             70% {
                 transform: scale(0.9);
             }
+
             100% {
                 opacity: 1;
                 transform: scale(1);
@@ -571,17 +647,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         @keyframes float {
-            0%, 100% { transform: translateX(-50%) translateY(0px); }
-            50% { transform: translateX(-50%) translateY(-15px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0px);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-15px);
+            }
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         /* Hide fallback when image loads successfully */
-        .snack-image:not([src=""]) ~ .snack-fallback {
+        .snack-image:not([src=""])~.snack-fallback {
             display: none;
         }
 
@@ -591,9 +681,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         @keyframes inputFocus {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         /* Button click effect */
@@ -602,12 +700,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         @keyframes buttonClick {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.98); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.98);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Animated background particles -->
     <div class="particles">
@@ -631,15 +738,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <div class="welcome-content">
                     <h1>Selamat Datang Kembali!</h1>
-                    <p>Masuk ke akun Anda untuk menikmati berbagai produk makanan ringan berkualitas tinggi dari Snack In.</p>
+                    <p>Masuk ke akun Anda untuk menikmati berbagai produk makanan ringan berkualitas tinggi dari Snack
+                        In.</p>
                 </div>
             </div>
-            
+
             <!-- Snack Illustration dengan Image -->
             <div class="snack-illustration">
                 <!-- Ganti src dengan path gambar snack Anda -->
-                <img src="/placeholder.svg?height=120&width=120" alt="Snack Illustration" class="snack-image" onerror="this.style.display='none'">
-                
+                <img src="/placeholder.svg?height=120&width=120" alt="Snack Illustration" class="snack-image"
+                    onerror="this.style.display='none'">
+
                 <!-- Fallback illustration jika gambar tidak ada -->
                 <div class="snack-fallback">🍿</div>
             </div>
@@ -675,12 +784,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <form method="POST" id="loginForm">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username" required>
+                        <input type="text" class="form-control" id="username" name="username"
+                            placeholder="Masukkan username" required>
                     </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Masukkan password" required>
                     </div>
 
                     <div class="form-options">
@@ -705,7 +816,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <script>
         // Add loading animation on form submit
-        document.getElementById('loginForm').addEventListener('submit', function() {
+        document.getElementById('loginForm').addEventListener('submit', function () {
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
@@ -714,17 +825,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Add focus animations
         const inputs = document.querySelectorAll('.form-control');
         inputs.forEach(input => {
-            input.addEventListener('focus', function() {
+            input.addEventListener('focus', function () {
                 this.parentElement.style.transform = 'translateY(-2px)';
                 this.parentElement.style.transition = 'all 0.3s ease';
             });
-            
-            input.addEventListener('blur', function() {
+
+            input.addEventListener('blur', function () {
                 this.parentElement.style.transform = 'translateY(0)';
             });
 
             // Typing animation effect
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 this.style.animation = 'inputFocus 0.3s ease-out';
                 setTimeout(() => {
                     this.style.animation = '';
@@ -755,18 +866,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Initialize particles
         createParticle();
-        
+
         // Recreate particles on window resize
         window.addEventListener('resize', createParticle);
 
         // Add ripple effect to button
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
+        document.getElementById('submitBtn').addEventListener('click', function (e) {
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
             const y = e.clientY - rect.top - size / 2;
-            
+
             ripple.style.width = ripple.style.height = size + 'px';
             ripple.style.left = x + 'px';
             ripple.style.top = y + 'px';
@@ -776,9 +887,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ripple.style.transform = 'scale(0)';
             ripple.style.animation = 'ripple 0.6s linear';
             ripple.style.pointerEvents = 'none';
-            
+
             this.appendChild(ripple);
-            
+
             setTimeout(() => {
                 ripple.remove();
             }, 600);
@@ -797,13 +908,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         document.head.appendChild(style);
 
         // Form validation with animation
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            
+
             if (!username || !password) {
                 e.preventDefault();
-                
+
                 // Shake animation for empty fields
                 if (!username) {
                     document.getElementById('username').style.animation = 'shake 0.5s ease-in-out';
@@ -811,12 +922,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if (!password) {
                     document.getElementById('password').style.animation = 'shake 0.5s ease-in-out';
                 }
-                
+
                 setTimeout(() => {
                     document.getElementById('username').style.animation = '';
                     document.getElementById('password').style.animation = '';
                 }, 500);
-                
+
                 return false;
             }
         });
@@ -833,4 +944,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         document.head.appendChild(shakeStyle);
     </script>
 </body>
+
 </html>
