@@ -1,6 +1,8 @@
 # SnackIn E-Commerce Web
 
-![SnackIn Presentation](images/logo/logo-1.png)
+<p align="center">
+  <img src="iimages\AHLINYA_CEMILAN1.png" alt="SnackIn Presentation" />
+</p>
 
 
 SnackIn adalah sebuah sistem informasi berbasis web yang berfungsi sebagai **Panel Admin dasbor** untuk mengelola operasional toko makanan/snack. Platform ini memberikan kendali penuh kepada pengelola toko untuk memantau pesanan, mengelola inventaris produk, kategori, data pelanggan, hingga melihat histori dan analitik penjualan.
