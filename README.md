@@ -1,6 +1,7 @@
-# 🍔 SnackIn Admin Dashboard
+# SnackIn E-Commerce Web
 
-![SnackIn Presentation](https://via.placeholder.com/1200x400/00227c/ffffff?text=SnackIn+Admin+Dashboard)
+![SnackIn Presentation](images/logo/logo-1.png)
+
 
 SnackIn adalah sebuah sistem informasi berbasis web yang berfungsi sebagai **Panel Admin dasbor** untuk mengelola operasional toko makanan/snack. Platform ini memberikan kendali penuh kepada pengelola toko untuk memantau pesanan, mengelola inventaris produk, kategori, data pelanggan, hingga melihat histori dan analitik penjualan.
 
@@ -75,4 +76,4 @@ Jika Anda ingin menjalankan proyek ini secara lokal:
 6. Akses proyek melalui browser di `http://localhost/SnackIn`.
 
 ---
-*Dibuat dengan ❤️ untuk sistem manajemen SnackIn.*
+
