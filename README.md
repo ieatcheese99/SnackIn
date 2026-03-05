@@ -1,7 +1,7 @@
 # SnackIn E-Commerce Web
 
 <p align="center">
-  <img src="iimages\AHLINYA_CEMILAN1.png" alt="SnackIn Presentation" />
+  <img src="iimages\AHLINYA CEMILAN1.png" alt="SnackIn Presentation" />
 </p>
 
 
