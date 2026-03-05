@@ -5,7 +5,7 @@
 </p>
 
 
-SnackIn adalah sebuah sistem informasi berbasis web yang berfungsi sebagai **Panel Admin dasbor** untuk mengelola operasional toko makanan/snack. Platform ini memberikan kendali penuh kepada pengelola toko untuk memantau pesanan, mengelola inventaris produk, kategori, data pelanggan, hingga melihat histori dan analitik penjualan.
+SnackIn adalah sebuah E-Commerce berbasis web yang berfungsi sebagai **Panel Admin/User dasbor** untuk mengelola operasional toko makanan/snack. Platform ini memberikan kendali penuh kepada pengelola toko untuk memantau pesanan, mengelola inventaris produk, kategori, data pelanggan, hingga melihat histori dan analitik penjualan.
 
 ---
 
